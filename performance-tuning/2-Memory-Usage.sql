@@ -4,10 +4,7 @@ FROM sys.dm_os_memory_clerks WITH (NOLOCK)
 GROUP BY [type]
 ORDER BY SUM(pages_kb) DESC
 
-SELECT session_id, requested_memory_kb / 1024 as RequestedMemMb, 
-granted_memory_kb / 1024 as GrantedMemMb, text
-FROM sys.dm_exec_query_memory_grants qmg
-CROSS APPLY sys.dm_exec_sql_text(sql_handle)
+ 
 
 SELECT counter_name,
        cntr_value
@@ -20,3 +17,8 @@ AND counter_name IN (
     'Total Server Memory (KB)',
     'Stolen Server Memory (KB)'
 );
+
+
+EXEC DBUtils..sp_whoisactive
+
+EXEC DBUtils..sp_blitzwho
