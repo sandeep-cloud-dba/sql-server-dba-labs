@@ -1115,3 +1115,17 @@ To master execution plans deeply, combine with:
 8. Why can parallelism slow a query?
 9. How does Query Store help tuning?
 10. What is the optimizer trying to minimize?
+
+Prompt
+I can also help you next with:
+
+Operator-by-operator deep dive
+Real execution plan case studies
+“How optimizer thinks” mental models
+Common anti-patterns
+Advanced plan XML analysis
+Parameter sniffing mastery
+Execution plan troubleshooting playbooks
+Daily practice roadmap for 90 days
+Mapping this book with Kalen Delaney internals
+A visual cheat sheet for all operators
