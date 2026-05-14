@@ -30,3 +30,21 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 1. Ad-hoc queries with literal values  - SQL will complete the full optimization process and compile a new plan each time
 2. To avoid it better use Sprocs or parameterized queries
 3. Another way to optimize it use a server setting called "Optimize For Ad Hoc Workloads"
+
+# Actions trigger recompile
+  • changing the structure of a table, view or function referenced by the query
+  • changing, or dropping, an index used by the query
+  • updating the statistics used by the query
+  • calling the function sp_recompile
+  • mixing DDL and DML within a single batch
+  • changing certain SET options within the T-SQL of the batch
+  • changes to cursor options within the query
+  • deferred compiles
+  • changes to a remote rowset if you're using a function like OPENQUERY.
+
+
+
+
+
+
+  
