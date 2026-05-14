@@ -17,4 +17,11 @@ Plan Age=Estimated CPU cost for compiling the plan * numbr of time it has been u
 Plan age = 10 * 5 =  50
 
 
-Start from Page 36
+# Manually Clearing Plan cache
+ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for single database
+
+# Criteria for Plan Reuse
+1. SQL text → must be exactly identical (even spaces matter).
+2. SET options → session settings (ANSI_NULLS, QUOTED_IDENTIFIER, etc.) must match.
+3. Database ID → identical queries in different databases create different plans.
+4. dbo.Table vs Table may lead to different plans.
