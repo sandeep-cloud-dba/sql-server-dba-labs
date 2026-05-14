@@ -56,4 +56,4 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   3. Estimated  -  does not but the plan will mostly be same 
 
 
-  
+  Page 51
