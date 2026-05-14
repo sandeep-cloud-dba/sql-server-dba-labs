@@ -42,9 +42,18 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   • deferred compiles
   • changes to a remote rowset if you're using a function like OPENQUERY.
 
+# Execution plan formats
+  1. XML
+  2. text
+  3. graphical
+# XML Plan
+  SET SHOWPLAN_XML ON – generates the estimated plan (i.e. the query is not executed).
+  SET STATISTICS_XML ON – generates the actual execution plan (i.e. with runtime information).
 
-
-
+# Estimated and Actual execution plan
+  1. there is only one execution plan (both will essentially same)
+  2. Actual Execution  Plan-  will have the run time values
+  3. Estimated  -  does not but the plan will mostly be same 
 
 
   
