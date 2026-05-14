@@ -25,3 +25,8 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 2. SET options → session settings (ANSI_NULLS, QUOTED_IDENTIFIER, etc.) must match.
 3. Database ID → identical queries in different databases create different plans.
 4. dbo.Table vs Table may lead to different plans.
+
+# Avoid Cache Churn
+1. Ad-hoc queries with literal values  - SQL will complete the full optimization process and compile a new plan each time
+2. To avoid it better use Sprocs or parameterized queries
+3. Another way to optimize it use a server setting called "Optimize For Ad Hoc Workloads"
