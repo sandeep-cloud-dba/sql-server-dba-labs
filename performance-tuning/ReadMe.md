@@ -55,5 +55,18 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   2. Actual Execution  Plan-  will have the run time values
   3. Estimated  -  does not but the plan will mostly be same 
 
+# Things to do for practice
+  1. Go to the properties of each operator and check it's value
+  2. look for big difference between the estimated and actual
+  3. how check operator's are using which stats
 
-  Page 51
+
+
+
+
+
+
+
+
+
+
