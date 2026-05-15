@@ -61,7 +61,36 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   3. how check operator's are using which stats
 
 
+# Getting Started with Reading Plans
+  1. Two Types of operator (physical and Logical)
+  2. Inner/LeftlRight etc Join  -  Logical
+  3. Nested Loop / Hash Match etc  -  Physical
 
+# Blocking Operators
+  Sort, hash Match, Adaptive Join -  require variable amount of memory to execute
+  Query with one of these operators may have to wait for available memory prior to execution, possibly adversly affecting the performance
+
+# Reading Plan
+  > Mostly the plans are read from righ to left and top to bottom (in the way data flows)
+  > But it is equally valid to read from left to right   (in the way operators are called)  
+  > Like top operator and clustered index scan (where it is returning only the top values)
+
+
+
+
+63
+
+
+
+
+
+
+
+
+
+
+
+  
 
 
 
