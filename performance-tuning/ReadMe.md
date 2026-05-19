@@ -55,12 +55,6 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   2. Actual Execution  Plan-  will have the run time values
   3. Estimated  -  does not but the plan will mostly be same 
 
-# Things to do for practice
-  1. Go to the properties of each operator and check it's value
-  2. look for big difference between the estimated and actual
-  3. how check operator's are using which stats
-
-
 # Getting Started with Reading Plans
   1. Two Types of operator (physical and Logical)
   2. Inner/LeftlRight etc Join  -  Logical
@@ -75,18 +69,21 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   > But it is equally valid to read from left to right   (in the way operators are called)  
   > Like top operator and clustered index scan (where it is returning only the top values)
 
+# Estimated VS actual number of rows 
+ > all costs in plan are based on cardinality estimation (therefore these costs are only as accurate as the optimizers cardinality estimation)
+
+
+# Things to do for practice
+  1. Go to the properties of each operator and check it's value
+  2. how check operator's are using which stats
+  3. before digging deeper always first compare estimated vs actual row counts and make sure they are not too off
+  4. if there is huge difference between actual vs estimated then there may be stats are not correct and need to fix the cardinality
+  5. fat line start and thin on left suggest filtering happening later (it is good if filtering happen at start) and thin st start and fat later means data is multiplying
 
 
 
-63
 
-
-
-
-
-
-
-
+67
 
 
 
