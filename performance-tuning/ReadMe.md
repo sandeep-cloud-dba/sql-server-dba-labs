@@ -79,12 +79,12 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   3. before digging deeper always first compare estimated vs actual row counts and make sure they are not too off
   4. if there is huge difference between actual vs estimated then there may be stats are not correct and need to fix the cardinality
   5. fat line start and thin on left suggest filtering happening later (it is good if filtering happen at start) and thin st start and fat later means data is multiplying
+  6. check for high cost scan that retrive limited dataset or or seeks that retrive extremly large datasets.
 
 
 
 
-67
-
+71
 
 
   
