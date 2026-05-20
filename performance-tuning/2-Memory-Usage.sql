@@ -20,8 +20,8 @@ WHERE object_name = 'SQLServer:Memory Manager'
 AND counter_name IN (
     'Memory Grants Pending',
     'Memory Grants Outstanding',
-    'Target Server Memory (KB)',
-    'Total Server Memory (KB)',
+    'Target Server Memory (KB)', -- Max server memory
+    'Total Server Memory (KB)',  -- SQL Consuming Currently
     'Stolen Server Memory (KB)'
 );
 
