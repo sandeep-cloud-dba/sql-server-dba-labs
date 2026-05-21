@@ -77,22 +77,26 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 
 
 
-
-
-
 # Things to Remember
   1. Query Hash -  hash value of query, which is stored with the plan and used by optimizer to reuse the plan
   2. for plan to be reused SET options and Database_ID should be same
   3. QueryPlanHash -  Hash value of the query plan
+
+
+
 
 # Things to do for practice
   1. Go to the properties of each operator and check it's value
   2. how check operator's are using which stats
   3. before digging deeper always first compare estimated vs actual row counts and make sure they are not too off
   4. if there is huge difference between actual vs estimated then there may be stats are not correct and need to fix the cardinality
-  5. fat line start and thin on left suggest filtering happening later (it is good if filtering happen at start) and thin st start and fat later means data is multiplying
+  5. fat line start and thin on left suggest filtering happening later (it is good if filtering happen at start) and thin at start and fat later means data is multiplying
   6. check for high cost scan that retrive limited dataset or or seeks that retrive extremly large datasets.
   7. if you want plan to be reused, parametrized the query
+ 
+
+
+
 
 
 # Useful Tools and Techniques when Reading Plans
@@ -101,6 +105,22 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   3. Extended Events
   4. Profiler
 
+
+# What to Look For in an Execution Plan
+  1. First Operator (SELECT/UPDATE/etc.) -  (contains: compile time, compile CPU, memory usage, optimization level, parameter sniffing info, SET options, QueryHash, QueryPlanHash)
+  2. Important SELECT Operator Properties
+      3. Cached Plan Size -> Memory consumed in plan cache -> Large plans can pressure cache memory.
+      4. CardinalityEstimationModelVersion
+      5. CompileCPU / CompileTime / CompileMemory -> High compile time may indicate: -> overly complex queries -> excessive joins
+  4. Warnings ⚠️ Yellow/red exclamation marks  - (Possible issues: memory spills, tempdb spills, implicit conversions, excessive memory grants)
+  5. Estimated vs Actual Rows CRITICAL. - Execution plan costs are based on estimates. If estimates are wrong: optimizer chooses bad plans, wrong joins, bad memory grants, spills, slow queries
+  6. Operator Cost - (Good for: comparing operators INSIDE SAME PLAN,  Bad for: comparing between plans, Why? Costs are mathematical estimates, not real execution time.)
+  7. Missing Index Suggestions - (Treat as hints, NOT commands.)
+  8. Data Flow Thickness (Pipes) - (Thicker arrows = more rows. Watch for: fat pipes suddenly becoming thin → filtering happening too late, thin pipes becoming huge → row multiplication problem)
+  9. Extra Operators - If you see an operator you don't understand:
+  10. Scans vs Seeks  - (Seek Efficient when: retrieving small data sets Bad when: retrieving huge data sets repeatedly) & (Scan Efficient when: reading large portions of table Bad when: returning very few rows)
+  
+  
   
 
 
