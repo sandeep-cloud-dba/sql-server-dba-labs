@@ -12,6 +12,7 @@ select * from sys.sql_modules -- check the code of SP
 3. The estimated cost of an execution plan depends largely on its cardinality estimations, in other words, its knowledge of how many rows are in a table, and its estimations of how many of those rows satisfy the various search and join conditions, and so on.
 
 # New cardinality estimator in SQL Server 2014
+1. CardinalityEstimationModelVersion, is this is 70 or less then it is old cardinality and if it is more than 70 then it is an new.
 
 Plan Age=Estimated CPU cost for compiling the plan * numbr of time it has been used
 Plan age = 10 * 5 =  50
@@ -73,6 +74,17 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
  > all costs in plan are based on cardinality estimation (therefore these costs are only as accurate as the optimizers cardinality estimation)
 
 
+
+
+
+
+
+
+# Things to Remember
+  1. Query Hash -  hash value of query, which is stored with the plan and used by optimizer to reuse the plan
+  2. for plan to be reused SET options and Database_ID should be same
+  3. QueryPlanHash -  Hash value of the query plan
+
 # Things to do for practice
   1. Go to the properties of each operator and check it's value
   2. how check operator's are using which stats
@@ -80,12 +92,14 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   4. if there is huge difference between actual vs estimated then there may be stats are not correct and need to fix the cardinality
   5. fat line start and thin on left suggest filtering happening later (it is good if filtering happen at start) and thin st start and fat later means data is multiplying
   6. check for high cost scan that retrive limited dataset or or seeks that retrive extremly large datasets.
+  7. if you want plan to be reused, parametrized the query
 
 
-
-
-71
-
+# Useful Tools and Techniques when Reading Plans
+  1. use SET STATISTICS IO ON; and SET STATISTICS TIME ON;
+  2. Query Store
+  3. Extended Events
+  4. Profiler
 
   
 
