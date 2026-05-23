@@ -72,6 +72,8 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 
 # Estimated VS actual number of rows 
  > all costs in plan are based on cardinality estimation (therefore these costs are only as accurate as the optimizers cardinality estimation)
+>
+> 
 
 
 
