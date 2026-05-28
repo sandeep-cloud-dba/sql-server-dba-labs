@@ -79,13 +79,14 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 
 
 
+
+
 # Things to Remember
   1. Query Hash -  hash value of query, which is stored with the plan and used by optimizer to reuse the plan
   2. for plan to be reused SET options and Database_ID should be same
   3. QueryPlanHash -  Hash value of the query plan
-
-
-
+  4. Rebinds and Rewinds (Estimated and Actual) - are only imp when dealing with the Nested loops
+  5. When the query has no WHERE clause, SQL Server must perform a scan. The optimizer chooses the nonclustered index(if there) because it is smaller than the clustered index and still contains the required columns (Clustered key is included in NCI), resulting in lower IO and better performance.
 
 # Things to do for practice
   1. Go to the properties of each operator and check it's value
@@ -96,11 +97,6 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   6. check for high cost scan that retrive limited dataset or or seeks that retrive extremly large datasets.
   7. if you want plan to be reused, parametrized the query
  
-
-
-
-
-
 # Useful Tools and Techniques when Reading Plans
   1. use SET STATISTICS IO ON; and SET STATISTICS TIME ON;
   2. Query Store
