@@ -73,7 +73,56 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 # Estimated VS actual number of rows 
  > all costs in plan are based on cardinality estimation (therefore these costs are only as accurate as the optimizers cardinality estimation)
 >
-> 
+
+# Are Scan bad
+1. If we need all or most rows from a table, a scan is often the most efficient operation and is not considered bad.
+2. If SQL Server scans a very large number of rows to return only a few rows, it can become inefficient because of unnecessary IO and logical reads. This may happen due to:
+    > missing or poor indexes
+    > stale statistics
+    > non-SARGable queries (functions or expressions on indexed columns)
+    > poor query design
+    > cardinality estimation
+3. Sometimes SQL Server may still choose a scan even when indexes and statistics are good. In such cases, we should investigate:
+    > estimated vs actual rows
+    > query predicates
+    > parameter sniffing
+    > optimizer cost decisions
+    > whether returning many rows actually makes a scan cheaper than a seek
+4. One Important Point
+   A Seek is not always faster than scan
+   If A query returns a large percentage of rows, SQL may intentinally choose a scan because
+   > many seeks + lookup cost more
+   > sequential reads are efficient
+
+# INDEX SEEK (CLUSTERED)
+1. In a seek operation, SQL Server directly navigates to the page(s) containing the required rows or to the start/end of a range, instead of scanning the entire index/table.
+2. Just like scans, seeks are not always good or bad. Seeks are usually efficient for retrieving a small number of rows from a large table.
+3. A seek can become inefficient if the optimizer underestimates the number of rows due to inaccurate statistics. This can lead to excessive key lookups or repeated reads.
+4. A seek occurs when:
+   > an index exists on the predicate column and the index covers the query
+     OR
+   > an index exists on the predicate column, does not fully cover the query, but the predicate is highly selective and returns only a small number of rows.
+5. If the index does not cover the query:
+    SQL Server may perform:
+    > Index Seek + Key Lookup
+    > Index Seek + RID Lookup
+# INDEX SEEK (NON-CLUSTERED)
+1. This works same as the clustered index seek only difference is we see predicate and seek predicate in properties (hover over the operator)
+2. NCI contain the index key + clustered index key + include columns (any columns that are included through include)
+
+#KEY LOOKUPS
+1. When the nonclustered index does not contain all the columns required by the query, SQL Server performs a Key Lookup to the clustered index to retrieve the missing columns.
+2. A Key Lookup happens after an Index Seek (or sometimes Index Scan) on the nonclustered index.
+3. A Key Lookup can be avoided by creating a covering index using:
+   > additional key columns
+   > INCLUDE columns
+4. However, it is not a good idea to create covering indexes for every query because too many indexes:
+   > increase storage
+   > slow down INSERT/UPDATE/DELETE operations
+   > increase maintenance overhead
+5. A Key Lookup is usually acceptable for a small number of rows, but it becomes expensive when executed many times.
+
+
 
 
 
@@ -96,13 +145,12 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   5. fat line start and thin on left suggest filtering happening later (it is good if filtering happen at start) and thin at start and fat later means data is multiplying
   6. check for high cost scan that retrive limited dataset or or seeks that retrive extremly large datasets.
   7. if you want plan to be reused, parametrized the query
- 
+
 # Useful Tools and Techniques when Reading Plans
   1. use SET STATISTICS IO ON; and SET STATISTICS TIME ON;
   2. Query Store
   3. Extended Events
   4. Profiler
-
 
 # What to Look For in an Execution Plan
   1. First Operator (SELECT/UPDATE/etc.) -  (contains: compile time, compile CPU, memory usage, optimization level, parameter sniffing info, SET options, QueryHash, QueryPlanHash)
@@ -121,7 +169,7 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
   
   
 
-
+94
 
 
 
