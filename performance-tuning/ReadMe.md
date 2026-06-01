@@ -135,6 +135,12 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 4. The results from the Index Seek and RID Lookup are combined using a Nested Loops operator.
 5. Bmk1000 = internal bookmark/RID value
 
+# Joining Data
+99
+
+
+
+
 
 
 
