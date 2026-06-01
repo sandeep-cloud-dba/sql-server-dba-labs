@@ -110,7 +110,7 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 1. This works same as the clustered index seek only difference is we see predicate and seek predicate in properties (hover over the operator)
 2. NCI contain the index key + clustered index key + include columns (any columns that are included through include)
 
-#KEY LOOKUPS
+# KEY LOOKUPS
 1. When the nonclustered index does not contain all the columns required by the query, SQL Server performs a Key Lookup to the clustered index to retrieve the missing columns.
 2. A Key Lookup happens after an Index Seek (or sometimes Index Scan) on the nonclustered index.
 3. A Key Lookup can be avoided by creating a covering index using:
@@ -122,8 +122,18 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
    > increase maintenance overhead
 5. A Key Lookup is usually acceptable for a small number of rows, but it becomes expensive when executed many times.
 
+# Table Scan
+1. Table Scans occur only against the Heap tables
+2. Table Scan can occur due to the absence of a useful nonclustered index.
+3. If a query requests all or most of the rows, SQL Server may choose a Table Scan because scanning can be cheaper than performing many index lookups.
+4. Even if a selective index exists, SQL Server may still choose a Table Scan when the table is very small.
 
-
+# RID Lookup
+1. RID Lookup is similar to Key Lookup. (RID Lookup → happens on a heap (table without a clustered index).)
+2. The nonclustered index does not contain all the columns required by the query, so SQL Server performs a RID Lookup to fetch the missing columns from the heap.
+3. The nonclustered index stores a special value called the RID (Row Identifier). (The RID points directly to the location of the row in the heap.)
+4. The results from the Index Seek and RID Lookup are combined using a Nested Loops operator.
+5. Bmk1000 = internal bookmark/RID value
 
 
 
