@@ -33,45 +33,45 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 3. Another way to optimize it use a server setting called "Optimize For Ad Hoc Workloads"
 
 # Actions trigger recompile
-  • changing the structure of a table, view or function referenced by the query
-  • changing, or dropping, an index used by the query
-  • updating the statistics used by the query
-  • calling the function sp_recompile
-  • mixing DDL and DML within a single batch
-  • changing certain SET options within the T-SQL of the batch
-  • changes to cursor options within the query
-  • deferred compiles
-  • changes to a remote rowset if you're using a function like OPENQUERY.
+• changing the structure of a table, view or function referenced by the query
+• changing, or dropping, an index used by the query
+• updating the statistics used by the query
+• calling the function sp_recompile
+• mixing DDL and DML within a single batch
+• changing certain SET options within the T-SQL of the batch
+• changes to cursor options within the query
+• deferred compiles
+• changes to a remote rowset if you're using a function like OPENQUERY.
 
 # Execution plan formats
-  1. XML
-  2. text
-  3. graphical
+1. XML
+2. text
+3. graphical
 # XML Plan
-  SET SHOWPLAN_XML ON – generates the estimated plan (i.e. the query is not executed).
-  SET STATISTICS_XML ON – generates the actual execution plan (i.e. with runtime information).
+SET SHOWPLAN_XML ON – generates the estimated plan (i.e. the query is not executed).
+SET STATISTICS_XML ON – generates the actual execution plan (i.e. with runtime information).
 
 # Estimated and Actual execution plan
-  1. there is only one execution plan (both will essentially same)
-  2. Actual Execution  Plan-  will have the run time values
-  3. Estimated  -  does not but the plan will mostly be same 
+1. there is only one execution plan (both will essentially same)
+2. Actual Execution  Plan-  will have the run time values
+3. Estimated  -  does not but the plan will mostly be same 
 
 # Getting Started with Reading Plans
-  1. Two Types of operator (physical and Logical)
-  2. Inner/LeftlRight etc Join  -  Logical
-  3. Nested Loop / Hash Match etc  -  Physical
+1. Two Types of operator (physical and Logical)
+2. Inner/LeftlRight etc Join  -  Logical
+3. Nested Loop / Hash Match etc  -  Physical
 
 # Blocking Operators
-  Sort, hash Match, Adaptive Join -  require variable amount of memory to execute
-  Query with one of these operators may have to wait for available memory prior to execution, possibly adversly affecting the performance
+Sort, hash Match, Adaptive Join -  require variable amount of memory to execute
+Query with one of these operators may have to wait for available memory prior to execution, possibly adversly affecting the performance
 
 # Reading Plan
-  > Mostly the plans are read from righ to left and top to bottom (in the way data flows)
-  > But it is equally valid to read from left to right   (in the way operators are called)  
-  > Like top operator and clustered index scan (where it is returning only the top values)
+> Mostly the plans are read from righ to left and top to bottom (in the way data flows)
+> But it is equally valid to read from left to right   (in the way operators are called)  
+> Like top operator and clustered index scan (where it is returning only the top values)
 
 # Estimated VS actual number of rows 
- > all costs in plan are based on cardinality estimation (therefore these costs are only as accurate as the optimizers cardinality estimation)
+> all costs in plan are based on cardinality estimation (therefore these costs are only as accurate as the optimizers cardinality estimation)
 >
 
 # Are Scan bad
@@ -106,6 +106,7 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
     SQL Server may perform:
     > Index Seek + Key Lookup
     > Index Seek + RID Lookup
+
 # INDEX SEEK (NON-CLUSTERED)
 1. This works same as the clustered index seek only difference is we see predicate and seek predicate in properties (hover over the operator)
 2. NCI contain the index key + clustered index key + include columns (any columns that are included through include)
@@ -136,7 +137,11 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for
 5. Bmk1000 = internal bookmark/RID value
 
 # Joining Data
-99
+1. The optimizer might choose from one of the below physical operator to perform join
+   > Nested Loop
+   > Hash Match
+   > Merge Join
+   > Adaptive Join
 
 
 
