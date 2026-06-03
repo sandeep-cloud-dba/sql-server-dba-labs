@@ -142,6 +142,8 @@ Query with one of these operators may have to wait for available memory prior to
    > Hash Match
    > Merge Join
    > Adaptive Join
+   
+   
 # Nested loop Join
 1. takes data from outer input and process against the inner input for each row. if the outer input returns 290 rows, the inner input will be executed 290 times once for each row from outer input, each execution of inner side performs the efficient seek using the value pushed form the outer input.
 2. Nested loop is generally efficient when
@@ -164,6 +166,28 @@ Non-SARGable predicates
 Parameter sniffing
 Plan reuse issues
 
+# Rebind and Rewinds
+Rebind = New Value = Re-execute
+
+Rewind = Same Value = Reuse Cached Result
+
+Only meaningful when inner operator can save results
+(Spool, Sort, TVF, Remote Query)
+
+Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
+<img width="766" height="533" alt="image" src="https://github.com/user-attachments/assets/803d71a5-f48c-4a28-ab3a-a2bedc027bb8" />
+
+
+
+# Opereator
+1. Below Operator Can save results from the previous execution (in this case only rebinds and rewinds are relevant)
+2. Index Spool
+3. Remote Query
+4. Row Count Spool
+5. Sort
+6. Table Spool
+7. Table Valued Function
+    
 
 
 
