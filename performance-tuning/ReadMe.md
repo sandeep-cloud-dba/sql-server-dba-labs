@@ -148,9 +148,21 @@ Query with one of these operators may have to wait for available memory prior to
    a. Outer Input is small
    b. Inner Put is indexed
    c. Matching rows can be found quickly using seeks
-
-
-
+3. A large Estimated vs Actual Rows difference doesn't automatically mean bad performance, but it is a strong clue that the optimizer may have chosen a suboptimal plan. This Could be because of
+> Stale or missing Statistics on predicate 
+> Volume or distribution of data has been changed significantly since the last stats, on the column
+> distribution in column may be non uniform
+> parameter sniffing may have occured
+4. Nested loop properties - Outer References shows the values being pushed from the outer input to the inner input.
+Estimated vs Actual Rows
+Check for large discrepancies.
+Possible causes:
+Missing statistics
+Stale statistics
+Skewed data distribution
+Non-SARGable predicates
+Parameter sniffing
+Plan reuse issues
 
 
 
