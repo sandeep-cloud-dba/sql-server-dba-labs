@@ -142,8 +142,12 @@ Query with one of these operators may have to wait for available memory prior to
    > Hash Match
    > Merge Join
    > Adaptive Join
-
-
+# Nested loop Join
+1. takes data from outer input and process against the inner input for each row. if the outer input returns 290 rows, the inner input will be executed 290 times once for each row from outer input, each execution of inner side performs the efficient seek using the value pushed form the outer input.
+2. Nested loop is generally efficient when
+   a. Outer Input is small
+   b. Inner Put is indexed
+   c. Matching rows can be found quickly using seeks
 
 
 
