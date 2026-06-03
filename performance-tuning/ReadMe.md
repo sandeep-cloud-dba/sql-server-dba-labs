@@ -176,17 +176,22 @@ Only meaningful when inner operator can save results
 
 Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 <img width="766" height="533" alt="image" src="https://github.com/user-attachments/assets/803d71a5-f48c-4a28-ab3a-a2bedc027bb8" />
+<img width="688" height="797" alt="image" src="https://github.com/user-attachments/assets/ce2f5087-eef9-49b9-9f48-ab45dd4316d7" />
+<img width="484" height="675" alt="image" src="https://github.com/user-attachments/assets/1e22e08b-a72f-4437-ab24-c37d8d28622d" />
+<img width="439" height="433" alt="image" src="https://github.com/user-attachments/assets/68fc9934-c3e7-48b3-b3f3-42187d7ca025" />
+<img width="495" height="435" alt="image" src="https://github.com/user-attachments/assets/ae55986e-421f-410b-ae54-eb36e705a6d0" />
+<img width="364" height="389" alt="image" src="https://github.com/user-attachments/assets/fd6608cb-f6fa-4ae6-a71e-38c4538c8c76" />
 
 
 
 # Opereator
 1. Below Operator Can save results from the previous execution (in this case only rebinds and rewinds are relevant)
-2. Index Spool
-3. Remote Query
-4. Row Count Spool
-5. Sort
-6. Table Spool
-7. Table Valued Function
+Index Spool
+Remote Query
+Row Count Spool
+Sort
+Table Spool
+Table Valued Function
     
 
 
