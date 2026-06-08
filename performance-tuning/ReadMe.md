@@ -156,15 +156,24 @@ Query with one of these operators may have to wait for available memory prior to
 > distribution in column may be non uniform
 > parameter sniffing may have occured
 4. Nested loop properties - Outer References shows the values being pushed from the outer input to the inner input.
-Estimated vs Actual Rows
-Check for large discrepancies.
-Possible causes:
-Missing statistics
-Stale statistics
-Skewed data distribution
-Non-SARGable predicates
-Parameter sniffing
-Plan reuse issues
+
+    Estimated vs Actual Rows
+    
+    Check for large discrepancies.
+    
+    Possible causes:
+    
+    Missing statistics
+    
+    Stale statistics
+    
+    Skewed data distribution
+    
+    Non-SARGable predicates
+    
+    Parameter sniffing
+    
+    Plan reuse issues
 
 # Rebind and Rewinds
 Rebind = New Value = Re-execute
@@ -185,12 +194,18 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 
 
 # Opereator
-1. Below Operator Can save results from the previous execution (in this case only rebinds and rewinds are relevant)
+Below Operator Can save results from the previous execution (in this case only rebinds and rewinds are relevant)
+
 Index Spool
+
 Remote Query
+
 Row Count Spool
+
 Sort
+
 Table Spool
+
 Table Valued Function
     
 
