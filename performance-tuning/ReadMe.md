@@ -136,26 +136,36 @@ Query with one of these operators may have to wait for available memory prior to
 4. The results from the Index Seek and RID Lookup are combined using a Nested Loops operator.
 5. Bmk1000 = internal bookmark/RID value
 
-# Joining Data
-1. The optimizer might choose from one of the below physical operator to perform join
-   > Nested Loop
-   > Hash Match
-   > Merge Join
-   > Adaptive Join
+# Joining Data - The optimizer might choose from one of the below physical operator to perform join
+   
+   Nested Loop
+   
+   Hash Match
+   
+   Merge Join
+   
+   Adaptive Join
    
    
 # Nested loop Join
 1. takes data from outer input and process against the inner input for each row. if the outer input returns 290 rows, the inner input will be executed 290 times once for each row from outer input, each execution of inner side performs the efficient seek using the value pushed form the outer input.
 2. Nested loop is generally efficient when
-   a. Outer Input is small
-   b. Inner Put is indexed
-   c. Matching rows can be found quickly using seeks
-3. A large Estimated vs Actual Rows difference doesn't automatically mean bad performance, but it is a strong clue that the optimizer may have chosen a suboptimal plan. This Could be because of
-> Stale or missing Statistics on predicate 
-> Volume or distribution of data has been changed significantly since the last stats, on the column
-> distribution in column may be non uniform
-> parameter sniffing may have occured
-4. Nested loop properties - Outer References shows the values being pushed from the outer input to the inner input.
+
+   Outer Input is small
+
+   Inner Put is indexed
+
+   Matching rows can be found quickly using seeks
+4. A large Estimated vs Actual Rows difference doesn't automatically mean bad performance, but it is a strong clue that the optimizer may have chosen a suboptimal plan. This Could be because of
+
+   Stale or missing Statistics on predicate 
+
+   Volume or distribution of data has been changed significantly since the last stats, on the column
+
+   distribution in column may be non uniform
+
+   parameter sniffing may have occured
+5. Nested loop properties - Outer References shows the values being pushed from the outer input to the inner input.
 
     Estimated vs Actual Rows
     
@@ -208,7 +218,63 @@ Table Spool
 
 Table Valued Function
     
+# HASH MATCH (JOIN) -  In this operator
 
+    Top Input -> Build (suppose return 290 rows)
+    
+    Bottom Input -> probe (Suppose reurn 19614 rows)
+
+    Suppose SQL choose to perform the nested loop then 290 searches in 19614 rows would be expensive. Instead SQL will choose HASH MATCH (Buiold the hash table form smaller input and search it againt the bigger input)
+
+    Build - > SQL will create the hash table in memory with smaller input (in this case with 290 rows) and put them in bucket
+
+    Probe -> SQL will reads table (with 19614 rows) one row at a time, it computes the hash value of joined column and compares, then reurs the rows
+    
+Why Use Hash Match?
+    
+    Case 1 -> Large table and Large table
+    
+    Case 2 -> small table and Large Table 
+    
+    Case 3 -> No Useful Indexes
+
+Why Is Hash Match Called Blocking?
+    
+    Before producing the result (Hash match) must first build the hash table, So it must consume ALL build rows 
+
+Biggest Performance Problem
+
+    Hash Match needs memory.
+
+    Suppose optimizer estimates: Build Input = 1,000 rows, but reality is: Build Input = 1,000,000 rows. Hash table no longer fits in memory.
+
+    SQL Server spills to TempDB. This becomes: Memory -> Disk Very Expensive
+
+When Hash Match May Indicate a Problem
+
+    Missing Index
+
+    Non-SARGable Query (WHERE YEAR(OrderDate)=2025)
+
+    Implicit Conversion (WHERE IntColumn = '100')
+
+Interview Notes
+   
+    Hash Match Join
+    Uses two inputs:
+        Build Input (top)
+        Probe Input (bottom)
+    SQL Server:
+        Builds hash table from smaller input
+        Probes larger input for matches
+    Best for:
+        Large unsorted datasets
+        Missing indexes
+        Large joins
+    Blocking operator:
+        Must complete build phase first
+    Main risk:
+        Memory spill to TempDB
 
 
 # Things to Remember
@@ -250,7 +316,7 @@ Table Valued Function
   
   
 
-94
+
 
 
 
