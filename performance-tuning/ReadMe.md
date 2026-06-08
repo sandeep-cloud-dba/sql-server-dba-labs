@@ -148,94 +148,73 @@ Query with one of these operators may have to wait for available memory prior to
    
    
 # Nested loop Join
-1. takes data from outer input and process against the inner input for each row. if the outer input returns 290 rows, the inner input will be executed 290 times once for each row from outer input, each execution of inner side performs the efficient seek using the value pushed form the outer input.
-2. Nested loop is generally efficient when
 
-   Outer Input is small
-
-   Inner Put is indexed
-
-   Matching rows can be found quickly using seeks
-4. A large Estimated vs Actual Rows difference doesn't automatically mean bad performance, but it is a strong clue that the optimizer may have chosen a suboptimal plan. This Could be because of
-
-   Stale or missing Statistics on predicate 
-
-   Volume or distribution of data has been changed significantly since the last stats, on the column
-
-   distribution in column may be non uniform
-
-   parameter sniffing may have occured
-5. Nested loop properties - Outer References shows the values being pushed from the outer input to the inner input.
-
-    Estimated vs Actual Rows
+    1. takes data from outer input and process against the inner input for each row. if the outer input returns 290 rows, the inner input will be executed 290 times once for each row from outer input, each execution of inner side performs the efficient seek using the value pushed form the outer input.
+    2. Nested loop is generally efficient when
     
-    Check for large discrepancies.
+           Outer Input is small
+           Inner Put is indexed
+           Matching rows can be found quickly using seeks
+       
+    4. A large Estimated vs Actual Rows difference doesn't automatically mean bad performance, but it is a strong clue that the optimizer may have chosen a suboptimal plan. This Could be because of
     
-    Possible causes:
+            Stale or missing Statistics on predicate 
+            Volume or distribution of data has been changed significantly since the last stats, on the column
+            distribution in column may be non uniform
+            parameter sniffing may have occured
+       
+    6. Nested loop properties - Outer References shows the values being pushed from the outer input to the inner input.
     
-    Missing statistics
-    
-    Stale statistics
-    
-    Skewed data distribution
-    
-    Non-SARGable predicates
-    
-    Parameter sniffing
-    
-    Plan reuse issues
+           Estimated vs Actual Rows
+           Check for large discrepancies.  
+           Possible causes:
+           Missing statistics
+           Stale statistics
+           Skewed data distribution
+           Non-SARGable predicates
+           Parameter sniffing
+           Plan reuse issues
 
 # Rebind and Rewinds
-Rebind = New Value = Re-execute
 
-Rewind = Same Value = Reuse Cached Result
-
-Only meaningful when inner operator can save results
-(Spool, Sort, TVF, Remote Query)
+    Rebind = New Value = Re-execute
+    Rewind = Same Value = Reuse Cached Result
+    Only meaningful when inner operator can save results
+    (Spool, Sort, TVF, Remote Query)
 
 Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
-<img width="766" height="533" alt="image" src="https://github.com/user-attachments/assets/803d71a5-f48c-4a28-ab3a-a2bedc027bb8" />
-<img width="688" height="797" alt="image" src="https://github.com/user-attachments/assets/ce2f5087-eef9-49b9-9f48-ab45dd4316d7" />
-<img width="484" height="675" alt="image" src="https://github.com/user-attachments/assets/1e22e08b-a72f-4437-ab24-c37d8d28622d" />
-<img width="439" height="433" alt="image" src="https://github.com/user-attachments/assets/68fc9934-c3e7-48b3-b3f3-42187d7ca025" />
-<img width="495" height="435" alt="image" src="https://github.com/user-attachments/assets/ae55986e-421f-410b-ae54-eb36e705a6d0" />
-<img width="364" height="389" alt="image" src="https://github.com/user-attachments/assets/fd6608cb-f6fa-4ae6-a71e-38c4538c8c76" />
+
+    <img width="766" height="533" alt="image" src="https://github.com/user-attachments/assets/803d71a5-f48c-4a28-ab3a-a2bedc027bb8" />
+    <img width="688" height="797" alt="image" src="https://github.com/user-attachments/assets/ce2f5087-eef9-49b9-9f48-ab45dd4316d7" />
+    <img width="484" height="675" alt="image" src="https://github.com/user-attachments/assets/1e22e08b-a72f-4437-ab24-c37d8d28622d" />
+    <img width="439" height="433" alt="image" src="https://github.com/user-attachments/assets/68fc9934-c3e7-48b3-b3f3-42187d7ca025" />
+    <img width="495" height="435" alt="image" src="https://github.com/user-attachments/assets/ae55986e-421f-410b-ae54-eb36e705a6d0" />
+    <img width="364" height="389" alt="image" src="https://github.com/user-attachments/assets/fd6608cb-f6fa-4ae6-a71e-38c4538c8c76" />
 
 
 
 # Opereator
-Below Operator Can save results from the previous execution (in this case only rebinds and rewinds are relevant)
 
-Index Spool
-
-Remote Query
-
-Row Count Spool
-
-Sort
-
-Table Spool
-
-Table Valued Function
+    Below Operator Can save results from the previous execution (in this case only rebinds and rewinds are relevant)
+    Index Spool
+    Remote Query
+    Row Count Spool
+    Sort
+    Table Spool
+    Table Valued Function
     
 # HASH MATCH (JOIN) -  In this operator
 
     Top Input -> Build (suppose return 290 rows)
-    
     Bottom Input -> probe (Suppose reurn 19614 rows)
-
     Suppose SQL choose to perform the nested loop then 290 searches in 19614 rows would be expensive. Instead SQL will choose HASH MATCH (Buiold the hash table form smaller input and search it againt the bigger input)
-
     Build - > SQL will create the hash table in memory with smaller input (in this case with 290 rows) and put them in bucket
-
     Probe -> SQL will reads table (with 19614 rows) one row at a time, it computes the hash value of joined column and compares, then reurs the rows
     
 Why Use Hash Match?
     
     Case 1 -> Large table and Large table
-    
     Case 2 -> small table and Large Table 
-    
     Case 3 -> No Useful Indexes
 
 Why Is Hash Match Called Blocking?
@@ -245,17 +224,13 @@ Why Is Hash Match Called Blocking?
 Biggest Performance Problem
 
     Hash Match needs memory.
-
     Suppose optimizer estimates: Build Input = 1,000 rows, but reality is: Build Input = 1,000,000 rows. Hash table no longer fits in memory.
-
     SQL Server spills to TempDB. This becomes: Memory -> Disk Very Expensive
 
 When Hash Match May Indicate a Problem
 
     Missing Index
-
     Non-SARGable Query (WHERE YEAR(OrderDate)=2025)
-
     Implicit Conversion (WHERE IntColumn = '100')
 
 Interview Notes
@@ -276,42 +251,54 @@ Interview Notes
     Main risk:
         Memory spill to TempDB
 
+When you see a Hash Match in an execution plan, ask yourself:
+
+    Which input is Build?
+    Which input is Probe?
+    Why wasn't Nested Loops chosen?
+    Why wasn't Merge Join chosen?
+    Did the Hash Match spill to TempDB?
+
 
 # Things to Remember
-  1. Query Hash -  hash value of query, which is stored with the plan and used by optimizer to reuse the plan
-  2. for plan to be reused SET options and Database_ID should be same
-  3. QueryPlanHash -  Hash value of the query plan
-  4. Rebinds and Rewinds (Estimated and Actual) - are only imp when dealing with the Nested loops
-  5. When the query has no WHERE clause, SQL Server must perform a scan. The optimizer chooses the nonclustered index(if there) because it is smaller than the clustered index and still contains the required columns (Clustered key is included in NCI), resulting in lower IO and better performance.
+
+    1. Query Hash -  hash value of query, which is stored with the plan and used by optimizer to reuse the plan
+    2. for plan to be reused SET options and Database_ID should be same
+    3. QueryPlanHash -  Hash value of the query plan
+    4. Rebinds and Rewinds (Estimated and Actual) - are only imp when dealing with the Nested loops
+    5. When the query has no WHERE clause, SQL Server must perform a scan. The optimizer chooses the nonclustered index(if there) because it is smaller than the clustered index and still contains the required columns (Clustered key is included in NCI), resulting in lower IO and better performance.
 
 # Things to do for practice
-  1. Go to the properties of each operator and check it's value
-  2. how check operator's are using which stats
-  3. before digging deeper always first compare estimated vs actual row counts and make sure they are not too off
-  4. if there is huge difference between actual vs estimated then there may be stats are not correct and need to fix the cardinality
-  5. fat line start and thin on left suggest filtering happening later (it is good if filtering happen at start) and thin at start and fat later means data is multiplying
-  6. check for high cost scan that retrive limited dataset or or seeks that retrive extremly large datasets.
-  7. if you want plan to be reused, parametrized the query
+  
+    1. Go to the properties of each operator and check it's value
+    2. how check operator's are using which stats
+    3. before digging deeper always first compare estimated vs actual row counts and make sure they are not too off
+    4. if there is huge difference between actual vs estimated then there may be stats are not correct and need to fix the cardinality
+    5. fat line start and thin on left suggest filtering happening later (it is good if filtering happen at start) and thin at start and fat later means data is multiplying
+    6. check for high cost scan that retrive limited dataset or or seeks that retrive extremly large datasets.
+    7. if you want plan to be reused, parametrized the query
 
 # Useful Tools and Techniques when Reading Plans
-  1. use SET STATISTICS IO ON; and SET STATISTICS TIME ON;
-  2. Query Store
-  3. Extended Events
-  4. Profiler
+
+    1. use SET STATISTICS IO ON; and SET STATISTICS TIME ON;
+    2. Query Store
+    3. Extended Events
+    4. Profiler
 
 # What to Look For in an Execution Plan
-  1. First Operator (SELECT/UPDATE/etc.) -  (contains: compile time, compile CPU, memory usage, optimization level, parameter sniffing info, SET options, QueryHash, QueryPlanHash)
-  2. Important SELECT Operator Properties
-      3. Cached Plan Size -> Memory consumed in plan cache -> Large plans can pressure cache memory.
-      4. CardinalityEstimationModelVersion
-      5. CompileCPU / CompileTime / CompileMemory -> High compile time may indicate: -> overly complex queries -> excessive joins
-  4. Warnings ⚠️ Yellow/red exclamation marks  - (Possible issues: memory spills, tempdb spills, implicit conversions, excessive memory grants)
-  5. Estimated vs Actual Rows CRITICAL. - Execution plan costs are based on estimates. If estimates are wrong: optimizer chooses bad plans, wrong joins, bad memory grants, spills, slow queries
-  6. Operator Cost - (Good for: comparing operators INSIDE SAME PLAN,  Bad for: comparing between plans, Why? Costs are mathematical estimates, not real execution time.)
-  7. Missing Index Suggestions - (Treat as hints, NOT commands.)
-  8. Data Flow Thickness (Pipes) - (Thicker arrows = more rows. Watch for: fat pipes suddenly becoming thin → filtering happening too late, thin pipes becoming huge → row multiplication problem)
-  9. Extra Operators - If you see an operator you don't understand:
-  10. Scans vs Seeks  - (Seek Efficient when: retrieving small data sets Bad when: retrieving huge data sets repeatedly) & (Scan Efficient when: reading large portions of table Bad when: returning very few rows)
+  
+    1. First Operator (SELECT/UPDATE/etc.) -  (contains: compile time, compile CPU, memory usage, optimization level, parameter sniffing info, SET options, QueryHash, QueryPlanHash)
+    2. Important SELECT Operator Properties
+         3. Cached Plan Size -> Memory consumed in plan cache -> Large plans can pressure cache memory.
+         4. CardinalityEstimationModelVersion
+         5. CompileCPU / CompileTime / CompileMemory -> High compile time may indicate: -> overly complex queries -> excessive joins
+    4. Warnings ⚠️ Yellow/red exclamation marks  - (Possible issues: memory spills, tempdb spills, implicit conversions, excessive memory grants)
+    5. Estimated vs Actual Rows CRITICAL. - Execution plan costs are based on estimates. If estimates are wrong: optimizer chooses bad plans, wrong joins, bad memory grants, spills, slow queries
+    6. Operator Cost - (Good for: comparing operators INSIDE SAME PLAN,  Bad for: comparing between plans, Why? Costs are mathematical estimates, not real execution time.)
+    7. Missing Index Suggestions - (Treat as hints, NOT commands.)
+    8. Data Flow Thickness (Pipes) - (Thicker arrows = more rows. Watch for: fat pipes suddenly becoming thin → filtering happening too late, thin pipes becoming huge → row multiplication problem)
+    9. Extra Operators - If you see an operator you don't understand:
+    10. Scans vs Seeks  - (Seek Efficient when: retrieving small data sets Bad when: retrieving huge data sets repeatedly) & (Scan Efficient when: reading large portions of table Bad when: returning very few rows)
   
   
   
