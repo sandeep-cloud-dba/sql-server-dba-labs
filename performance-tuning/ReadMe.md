@@ -259,6 +259,26 @@ When you see a Hash Match in an execution plan, ask yourself:
     Why wasn't Merge Join chosen?
     Did the Hash Match spill to TempDB?
 
+# MERGE JOIN
+
+    1. Requires both the inputs to be ordered on JOIN column
+    2. It takes two ordered inputs and merges them together by matching join column values.
+    3. If one or both inputs are not ordered, SQL Server may add a Sort operator.
+    4. Large Sort operators can be expensive. If you frequently see: Sort -> Merge Join, then check whether an index could provide the required ordering and eliminate the Sort.
+    5. Merge Join can perform:
+        One-to-One
+        One-to-Many
+        Many-to-Many -  When Duplicate exist on both the input (SQL Server must remember duplicate rows and may use a worktable in TempDB.) This is where Merge Join becomes more expensive.
+The Most Important Property
+    
+    When you see Merge Join, check: Many To Many = False
+    Many To Many = True (Investigate Duplicates exist on both sides. May require worktables and rewinds.)
+
+When is Merge Join Usually Chosen?
+
+    Case 1: When the inputs are already sorted
+    Case 2: Large DataSets
+    Case 3: Sorted indexes exist on join columns
 
 # Things to Remember
 
