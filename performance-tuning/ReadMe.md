@@ -313,12 +313,13 @@ When is Merge Join Usually Chosen?
          4. CardinalityEstimationModelVersion
          5. CompileCPU / CompileTime / CompileMemory -> High compile time may indicate: -> overly complex queries -> excessive joins
     4. Warnings ⚠️ Yellow/red exclamation marks  - (Possible issues: memory spills, tempdb spills, implicit conversions, excessive memory grants)
-    5. Estimated vs Actual Rows CRITICAL. - Execution plan costs are based on estimates. If estimates are wrong: optimizer chooses bad plans, wrong joins, bad memory grants, spills, slow queries
-    6. Operator Cost - (Good for: comparing operators INSIDE SAME PLAN,  Bad for: comparing between plans, Why? Costs are mathematical estimates, not real execution time.)
+    5. Estimated vs Actual Rows CRITICAL. - Execution plan costs are based on estimates. If estimates are wrong: optimizer chooses bad plans, wrong joins, bad            memory grants, spills, slow queries
+    6. Operator Cost - (Good for: comparing operators INSIDE SAME PLAN,  Bad for: comparing between plans, Why? Costs are mathematical estimates, not real                execution time.)
     7. Missing Index Suggestions - (Treat as hints, NOT commands.)
-    8. Data Flow Thickness (Pipes) - (Thicker arrows = more rows. Watch for: fat pipes suddenly becoming thin → filtering happening too late, thin pipes becoming huge → row multiplication problem)
+    8. Data Flow Thickness (Pipes) - (Thicker arrows = more rows. Watch for: fat pipes suddenly becoming thin → filtering happening too late, thin pipes becoming         huge → row multiplication problem)
     9. Extra Operators - If you see an operator you don't understand:
-    10. Scans vs Seeks  - (Seek Efficient when: retrieving small data sets Bad when: retrieving huge data sets repeatedly) & (Scan Efficient when: reading large portions of table Bad when: returning very few rows)
+    10. Scans vs Seeks  - (Seek Efficient when: retrieving small data sets Bad when: retrieving huge data sets repeatedly) & (Scan Efficient when: reading large           portions of table Bad when: returning very few rows)
+    11. If there is any expensive operator first check "WHY IT IS THERE once clarified check is it really necessary"
   
   
   
