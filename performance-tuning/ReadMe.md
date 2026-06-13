@@ -280,6 +280,18 @@ When is Merge Join Usually Chosen?
     Case 2: Large DataSets
     Case 3: Sorted indexes exist on join columns
 
+# Sorting and Aggregating Data
+
+
+
+140
+
+
+
+
+
+
+
 # Things to Remember
 
     1. Query Hash -  hash value of query, which is stored with the plan and used by optimizer to reuse the plan
