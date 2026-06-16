@@ -278,11 +278,35 @@ When is Merge Join Usually Chosen?
     Case 3: Sorted indexes exist on join columns
 
 # Sorting and Aggregating Data
-
-
-
-140
-
+    Sort
+    ----
+    - Blocking operator.
+    - Needs all rows before returning results.
+    - Avoided if index already provides required order.
+    
+    Top N Sort
+    ----------
+    - Used with TOP + ORDER BY.
+    - Returns only requested rows.
+    
+    Distinct Sort
+    -------------
+    - Sorts rows and removes duplicates.
+    - Duplicates become adjacent after sorting.
+    
+    Sort Warning
+    ------------
+    - Usually indicates TempDB spill.
+    - Caused by insufficient memory grant.
+    - Often due to poor cardinality estimates.
+    - SQL calculates memory grant based on Estimated Row and Estimated Row Size 
+    - For Exampple Estimated Rows = 10,000, Memory allocated for 10,000 rows, Actual Rows = 75,000 (Memory becomes insufficient), sort -> tempdb spill
+    
+    Troubleshooting:
+    Scan -> Compute Scalar -> Filter -> Sort
+    
+    Find first operator where
+    Estimated Rows ≠ Actual Rows.
 
 
 
