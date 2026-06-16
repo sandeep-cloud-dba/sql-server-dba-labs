@@ -308,6 +308,41 @@ When is Merge Join Usually Chosen?
     Find first operator where
     Estimated Rows ≠ Actual Rows.
 
+    Stream Aggregate 
+        Requires ordered input.
+        Can use:
+        - Ordered Index Scan
+        - Ordered Clustered Scan
+        - Sort + Stream Aggregate
+        
+        Processes rows as they arrive.
+        
+        Usually memory efficient.
+
+    Hash Aggregate
+        Does not require ordered input.
+
+        Builds a hash table in memory.
+        
+        Stores:
+        - Grouping key
+        - Aggregate calculations
+        
+        Used when sorting would be more expensive.
+        
+        Can spill to TempDB if memory grant is insufficient.
+
+       NOTE: Creating an index on the GROUP BY column may allow SQL Server to use a Stream Aggregate instead of a Hash Aggregate.
+
+        **Ordered Input
+          ↓
+    Stream Aggregate
+    
+    Unordered Input
+          ↓
+    Hash Aggregate
+          OR
+    Sort + Stream Aggregate**
 
 
 
