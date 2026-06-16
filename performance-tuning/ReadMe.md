@@ -342,7 +342,19 @@ When is Merge Join Usually Chosen?
           ↓
     Hash Aggregate
           OR
-    Sort + Stream Aggregate**
+    Sort + Stream Aggregate
+    
+    Unordered Input
+      ↓
+    Optimizer evaluates
+    
+    Option A:
+    Sort + Stream Aggregate
+    
+    Option B:
+    Hash Aggregate
+    
+    Chooses cheaper option**
 
 
 
