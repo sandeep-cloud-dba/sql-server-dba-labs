@@ -139,11 +139,8 @@
 # Joining Data - The optimizer might choose from one of the below physical operator to perform join
    
        Nested Loop
-       
        Hash Match
-       
        Merge Join
-       
        Adaptive Join
    
    
