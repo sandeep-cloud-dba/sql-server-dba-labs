@@ -361,7 +361,6 @@ When is Merge Join Usually Chosen?
 
 
 # Things to Remember
-
     1. Query Hash -  hash value of query, which is stored with the plan and used by optimizer to reuse the plan
     2. for plan to be reused SET options and Database_ID should be same
     3. QueryPlanHash -  Hash value of the query plan
@@ -369,7 +368,6 @@ When is Merge Join Usually Chosen?
     5. When the query has no WHERE clause, SQL Server must perform a scan. The optimizer chooses the nonclustered index(if there) because it is smaller than the clustered index and still contains the required columns (Clustered key is included in NCI), resulting in lower IO and better performance.
 
 # Things to do for practice
-  
     1. Go to the properties of each operator and check it's value
     2. how check operator's are using which stats
     3. before digging deeper always first compare estimated vs actual row counts and make sure they are not too off
@@ -379,14 +377,12 @@ When is Merge Join Usually Chosen?
     7. if you want plan to be reused, parametrized the query
 
 # Useful Tools and Techniques when Reading Plans
-
     1. use SET STATISTICS IO ON; and SET STATISTICS TIME ON;
     2. Query Store
     3. Extended Events
     4. Profiler
 
 # What to Look For in an Execution Plan
-  
     1. First Operator (SELECT/UPDATE/etc.) -  (contains: compile time, compile CPU, memory usage, optimization level, parameter sniffing info, SET options, QueryHash, QueryPlanHash)
     2. Important SELECT Operator Properties
          3. Cached Plan Size -> Memory consumed in plan cache -> Large plans can pressure cache memory.
@@ -402,11 +398,14 @@ When is Merge Join Usually Chosen?
     11. If there is any expensive operator first check "WHY IT IS THERE once clarified check is it really necessary"
   
   
-  
+  # Question to be asked when evaluating the execution Plan
+      1. Why Strem / Hash Aggregate, Scan Seek etc
+      2. Is Input already Ordered
+      3. Could an Index eliminate the Hash Aggregate or Hash Match
 
 
 
-
+148
 
 
 
