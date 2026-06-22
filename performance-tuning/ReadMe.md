@@ -405,7 +405,7 @@ When is Merge Join Usually Chosen?
 
 
 
-148
+148 -  Table Spool
 
 
 
