@@ -277,7 +277,7 @@ When is Merge Join Usually Chosen?
     Case 2: Large DataSets
     Case 3: Sorted indexes exist on join columns
 
-# Sorting and Aggregating Data
+# Sorting and Aggregating Data.
     Sort
     ----
     - Blocking operator.
