@@ -8,7 +8,7 @@
 
 # if only one error needs to be skipped, pass all parametera and run it on subscriber on subscribed database
     EXEC  sp_setsubscriptionxactseqno
-     @publisher =  N'PRGCSQL01'
-      ,@publisher_db =  N'Geico_RP_PROD'
-      ,@publication =  N'GEICO_RP_PROD2FEED'
+     @publisher =  N'<Server_Name>'
+      ,@publisher_db =  N'DB_Name'
+      ,@publication =  N'Publication_Name'
       ,@xact_seqno = 0x00369457001FB2A80026
