@@ -356,8 +356,159 @@ When is Merge Join Usually Chosen?
     
     Chooses cheaper option**
 
+# Table Spool
+    Table Spool stores intermediate results in a worktable and reuses them during rewinds, avoiding repeated execution of expensive operators.
+    Stores rows in a worktable.
+    
+    Rebind:
+      Populate spool.
+    
+    Rewind:
+      Reuse rows from spool.
 
+      Plan:
 
+        Hash Aggregate
+              ↓
+        Table Spool
+              ↓
+        Nested Loops
+        
+        SalesPerson rows:
+        
+        1
+        1
+        1
+        2
+        3
+        4
+        4
+        5
+        6
+        6
+        7
+        8
+        9
+        10
+        First Execution
+        Rebind = 1
+        
+        SQL Server:
+        
+        Scan SalesOrderHeader
+        Hash Aggregate
+        Create Territory Totals
+        Store in Worktable
+        
+        Result:
+        
+        TerritoryID | TotalTax
+        ----------------------
+        1
+        2
+        3
+        ...
+        10
+        
+        stored once.
+        
+        Remaining Executions
+        Rewind = 13
+        
+        SQL Server:
+        
+        Reuse worktable
+        
+        No new scan.
+        No new aggregate
+
+# Index Spool
+    Index Spool stores intermediate results in an indexed worktable, allowing SQL Server to efficiently locate and reuse previously cached results for repeated search values.
+    Stores rows in an indexed worktable.
+    
+    Rebind:
+      Populate spool for new key.
+    
+    Rewind:
+      Reuse previously cached value(s)
+      through indexed lookup.
+
+          Plan:
+
+        Index Seek
+             ↓
+        Stream Aggregate
+             ↓
+        Index Spool
+             ↓
+        Nested Loops
+        
+        SalesPerson rows:
+        
+        1
+        1
+        1
+        2
+        3
+        4
+        4
+        5
+        6
+        6
+        7
+        8
+        9
+        10
+        
+        Distinct Territories:
+        
+        1,2,3,4,5,6,7,8,9,10
+        
+        Total:
+        
+        10 distinct values
+        TerritoryID = 1
+        Rebind
+        
+        Execute:
+        
+        Index Seek
+        Stream Aggregate
+        Store result in Index Spool
+        TerritoryID = 1 again
+        Rewind
+        
+        Reuse cached result.
+        
+        No seek.
+        
+        No aggregate.
+        
+        TerritoryID = 2
+        Rebind
+        
+        New value.
+        
+        Need new seek.
+        
+        Need new aggregate.
+        
+        Store result.
+        
+        Final counts:
+        
+        10 distinct TerritoryIDs
+        
+        Therefore:
+        
+        10 Rebinds
+        
+        and
+        
+        14 total rows
+        -10 distinct rows
+        ----------------
+        4 Rewinds
 
 
 # Things to Remember
