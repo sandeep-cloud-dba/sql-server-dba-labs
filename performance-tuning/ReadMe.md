@@ -548,6 +548,13 @@ When is Merge Join Usually Chosen?
                 ----------------
                 4 Rewinds
 
+# Execution Plans for Data Modifications
+
+
+
+
+
+
 
 # Things to Remember
     1. Query Hash -  hash value of query, which is stored with the plan and used by optimizer to reuse the plan
@@ -555,7 +562,8 @@ When is Merge Join Usually Chosen?
     3. QueryPlanHash -  Hash value of the query plan
     4. Rebinds and Rewinds (Estimated and Actual) - are only imp when dealing with the Nested loops
     5. When the query has no WHERE clause, SQL Server must perform a scan. The optimizer chooses the nonclustered index(if there) because it is smaller than the clustered index and still contains the required columns (Clustered key is included in NCI), resulting in lower IO and better performance.
-
+    6. Once you approach:     5%-20% of a table, SQL Server often starts preferring scans over seeks + lookups.
+ 
 # Things to do for practice
     1. Go to the properties of each operator and check it's value
     2. how check operator's are using which stats
@@ -588,9 +596,17 @@ When is Merge Join Usually Chosen?
   
   
   # Question to be asked when evaluating the execution Plan
-      1. Why Strem / Hash Aggregate, Scan Seek etc
-      2. Is Input already Ordered
-      3. Could an Index eliminate the Hash Aggregate or Hash Match
+    1. Why Strem / Hash Aggregate, Scan Seek etc
+    2. Is Input already Ordered
+    3. Could an Index eliminate the Hash Aggregate or Hash Match
+    4. Is the predicate selective enough?
+    5. Does the index cover the query?
+    6. Would seeks require many lookups?
+    7. Is the query returning a large percentage of the table?
+    8. Is a later operator (Sort, Window Function, Aggregate) dominating the cost anyway?
+    9. why clustered index scan on table
+		> How many rows exist?
+		> How many rows are returned?
 
 
 
