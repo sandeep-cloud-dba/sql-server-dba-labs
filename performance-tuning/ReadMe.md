@@ -357,158 +357,196 @@ When is Merge Join Usually Chosen?
     Chooses cheaper option**
 
 # Table Spool
-    Table Spool stores intermediate results in a worktable and reuses them during rewinds, avoiding repeated execution of expensive operators.
-    Stores rows in a worktable.
+    A Table Spool is a temporary work table that SQL Server creates in tempdb to store intermediate results for reuse.
+    "SQL Server doesn't want to repeatedly execute an expensive operation, so it stores the result and reuses it."
+    Example:
+    Nested Loops
+        |
+    Table Spool
+        |
+    Index Seek
     
-    Rebind:
-      Populate spool.
+    Instead of repeatedly performing the Index Seek, SQL Server stores the result in a spool and reuses it.
     
-    Rewind:
-      Reuse rows from spool.
-
-      Plan:
-
-        Hash Aggregate
-              ↓
-        Table Spool
-              ↓
-        Nested Loops
+    Why SQL Server Uses It
+    Avoid repeated scans
+    Avoid repeated seeks
+    Support Nested Loop joins
+    Support recursive queries
+    Improve performance when data is reused
+  
+    DBA Perspective
+    When you see a Table Spool:
+    1. Why is SQL Server caching rows?
+    2. Is it compensating for a missing index?
+    3. Is tempdb being heavily used?
+    4. Can query rewriting eliminate the spool?
         
-        SalesPerson rows:
+            Rebind:
+              Populate spool.
+            
+            Rewind:
+              Reuse rows from spool.
         
-        1
-        1
-        1
-        2
-        3
-        4
-        4
-        5
-        6
-        6
-        7
-        8
-        9
-        10
-        First Execution
-        Rebind = 1
+              Plan:
         
-        SQL Server:
-        
-        Scan SalesOrderHeader
-        Hash Aggregate
-        Create Territory Totals
-        Store in Worktable
-        
-        Result:
-        
-        TerritoryID | TotalTax
-        ----------------------
-        1
-        2
-        3
-        ...
-        10
-        
-        stored once.
-        
-        Remaining Executions
-        Rewind = 13
-        
-        SQL Server:
-        
-        Reuse worktable
-        
-        No new scan.
-        No new aggregate
+                Hash Aggregate
+                      ↓
+                Table Spool
+                      ↓
+                Nested Loops
+                
+                SalesPerson rows:
+                
+                1
+                1
+                1
+                2
+                3
+                4
+                4
+                5
+                6
+                6
+                7
+                8
+                9
+                10
+                First Execution
+                Rebind = 1
+                
+                SQL Server:
+                
+                Scan SalesOrderHeader
+                Hash Aggregate
+                Create Territory Totals
+                Store in Worktable
+                
+                Result:
+                
+                TerritoryID | TotalTax
+                ----------------------
+                1
+                2
+                3
+                ...
+                10
+                
+                stored once.
+                
+                Remaining Executions
+                Rewind = 13
+                
+                SQL Server:
+                
+                Reuse worktable
+                
+                No new scan.
+                No new aggregate
 
 # Index Spool
-    Index Spool stores intermediate results in an indexed worktable, allowing SQL Server to efficiently locate and reuse previously cached results for repeated search values.
-    Stores rows in an indexed worktable.
+    An Index Spool is similar to Table Spool, but SQL Server creates a temporary indexed structure in tempdb.
     
-    Rebind:
-      Populate spool for new key.
-    
-    Rewind:
-      Reuse previously cached value(s)
-      through indexed lookup.
+    Why SQL Server Uses It
+        Suppose SQL Server repeatedly searches rows using a particular key.
+        Instead of scanning repeatedly:
+        Create temporary index
+               ↓
+        Perform fast lookups
 
-          Plan:
+    DBA Interpretation
+        When you see Index Spool:
+        Often SQL Server is saying:
+        "I wish I had a proper permanent index."
 
-        Index Seek
-             ↓
-        Stream Aggregate
-             ↓
-        Index Spool
-             ↓
-        Nested Loops
+    Frequent Index Spools often indicate:
+        Missing indexes
+        Poor indexing strategy
+        Suboptimal query design
+
+            Rebind:
+              Populate spool for new key.
+            
+            Rewind:
+              Reuse previously cached value(s)
+              through indexed lookup.
         
-        SalesPerson rows:
+                  Plan:
         
-        1
-        1
-        1
-        2
-        3
-        4
-        4
-        5
-        6
-        6
-        7
-        8
-        9
-        10
-        
-        Distinct Territories:
-        
-        1,2,3,4,5,6,7,8,9,10
-        
-        Total:
-        
-        10 distinct values
-        TerritoryID = 1
-        Rebind
-        
-        Execute:
-        
-        Index Seek
-        Stream Aggregate
-        Store result in Index Spool
-        TerritoryID = 1 again
-        Rewind
-        
-        Reuse cached result.
-        
-        No seek.
-        
-        No aggregate.
-        
-        TerritoryID = 2
-        Rebind
-        
-        New value.
-        
-        Need new seek.
-        
-        Need new aggregate.
-        
-        Store result.
-        
-        Final counts:
-        
-        10 distinct TerritoryIDs
-        
-        Therefore:
-        
-        10 Rebinds
-        
-        and
-        
-        14 total rows
-        -10 distinct rows
-        ----------------
-        4 Rewinds
+                Index Seek
+                     ↓
+                Stream Aggregate
+                     ↓
+                Index Spool
+                     ↓
+                Nested Loops
+                
+                SalesPerson rows:
+                
+                1
+                1
+                1
+                2
+                3
+                4
+                4
+                5
+                6
+                6
+                7
+                8
+                9
+                10
+                
+                Distinct Territories:
+                
+                1,2,3,4,5,6,7,8,9,10
+                
+                Total:
+                
+                10 distinct values
+                TerritoryID = 1
+                Rebind
+                
+                Execute:
+                
+                Index Seek
+                Stream Aggregate
+                Store result in Index Spool
+                TerritoryID = 1 again
+                Rewind
+                
+                Reuse cached result.
+                
+                No seek.
+                
+                No aggregate.
+                
+                TerritoryID = 2
+                Rebind
+                
+                New value.
+                
+                Need new seek.
+                
+                Need new aggregate.
+                
+                Store result.
+                
+                Final counts:
+                
+                10 distinct TerritoryIDs
+                
+                Therefore:
+                
+                10 Rebinds
+                
+                and
+                
+                14 total rows
+                -10 distinct rows
+                ----------------
+                4 Rewinds
 
 
 # Things to Remember
