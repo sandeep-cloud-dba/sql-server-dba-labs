@@ -6,7 +6,7 @@
     #A plan is no0longer valid after making changes to query (even a simple space)
     #Plan evaluation is a heuristic process.
 
-# The importance of statistics
+# The importance of statistics.
     1. Execution plan is hevaily dependent on the Statistics
     2. Eevery time the query is executed it does not read the data from the table to create execution plan, instead it uses the statistics that represent the entire data collection
     3. The estimated cost of an execution plan depends largely on its cardinality estimations, in other words, its knowledge of how many rows are in a table, and its estimations of how many of those rows satisfy the various search and join conditions, and so on.
