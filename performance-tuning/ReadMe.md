@@ -608,9 +608,11 @@ When is Merge Join Usually Chosen?
 		> How many rows exist?
 		> How many rows are returned?
 
-
-
-148 -  Table Spool
+# Pro Way to Analyze UPDATE Plans
+	Q.1: How did SQL Server find the rows? (Clustered Index Scan or Index Seek)
+	Q.2: Which column caused this operator? (look at the predicate)
+	Q.3: Why Scan? ( and not seek)
+	Q.4: Is SQL reading too much?
 
 
 
