@@ -444,6 +444,14 @@ When is Merge Join Usually Chosen?
                 No new scan.
                 No new aggregate
 
+				What is a Table Spool?
+				Table Spool stores intermediate rows in a worktable (tempdb) so SQL Server can reuse them later instead of re-executing expensive operations.
+				Always check these 3 properties
+				Property			Why check?
+				NodeID				Identifies the spool that created the worktable.
+				PrimaryNodeID		Tells whether another spool is reusing that worktable.
+				Logical Operation	Identifies whether it is Lazy Spool or Eager Spool.
+
 # Index Spool
     An Index Spool is similar to Table Spool, but SQL Server creates a temporary indexed structure in tempdb.
     
@@ -593,6 +601,7 @@ When is Merge Join Usually Chosen?
     9. Extra Operators - If you see an operator you don't understand:
     10. Scans vs Seeks  - (Seek Efficient when: retrieving small data sets Bad when: retrieving huge data sets repeatedly) & (Scan Efficient when: reading large           portions of table Bad when: returning very few rows)
     11. If there is any expensive operator first check "WHY IT IS THERE once clarified check is it really necessary"
+	12. If you see table spool, Check NodeID and PrimaryNodeID, suppose if the NodeID is 21 and PrimaryNodeID is 7 that means Node 21 is not newly created, it has been reused from 7
   
   
   # Question to be asked when evaluating the execution Plan
