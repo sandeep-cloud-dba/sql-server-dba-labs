@@ -15,7 +15,7 @@
     1. CardinalityEstimationModelVersion, is this is 70 or less then it is old cardinality and if it is more than 70 then it is an new.
     
     Plan Age=Estimated CPU cost for compiling the plan * numbr of time it has been used
-    Plan age = 10 * 5 =  50
+    Plan age = 10 * 5 =  50 
 
 
 # Manually Clearing Plan cache
