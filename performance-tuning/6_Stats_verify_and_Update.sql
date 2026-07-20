@@ -61,6 +61,7 @@ FROM    [sys].[dm_db_index_physical_stats](DB_ID(N'AdventureWorks2022'),
 WHERE   [ips].[index_level] = 0;
 
 
+# Track Modification on table  
 
 /* This  [system_internals_partition_columns], this system view is not documented and is intended for internal use only. 
 It may change or be removed in future versions of SQL Server. Use it at your own risk.
@@ -80,7 +81,6 @@ FROM    [sys].[system_internals_partition_columns] AS [ipc]
                AND [p].[index_id] = [i].[index_id]
 WHERE   [p].[object_id] = OBJECT_ID(N'Sales.TestSalesOrderDetail');
 
-# Track Modification on table  
 
 /*[sys].[dm_db_index_operational_stats] - SQL Server tracks all modifications for a table, regardless of the column modified.
 Updates of columns in the key will show up twice if you are aggregating all the leaf level counters, which will inflate the modification counter.
@@ -128,4 +128,57 @@ FROM   [sys].[dm_db_stats_properties]
         AS [sp]
         JOIN [sys].[stats] AS [s] ON [sp].[object_id] = [s].[object_id]
                                      AND [sp].[stats_id] = [s].[stats_id];
+
+
+ --How to start measuing the rate of modification on a table
+ -- all statistics, ordered by update_date descending
+SELECT  [sch].[name] + '.' + [so].[name] AS [TableName] ,
+        [ss].[name] AS [Statistic] ,
+        [ss].[auto_Created] AS [WasAutoCreated] ,
+        [ss].[user_created] AS [WasUserCreated] ,
+        [ss].[has_filter] AS [IsFiltered] ,
+        [ss].[filter_definition] AS [FilterDefinition] ,
+        [ss].[is_temporary] AS [IsTemporary],
+        [sp].[last_updated] AS [StatsLastUpdated], 
+        [sp].[rows] AS [RowsInTable], 
+        [sp].[rows_sampled] AS [RowsSampled], 
+        [sp].[unfiltered_rows] AS [UnfilteredRows],
+        [sp].[modification_counter] AS [RowModifications],
+        [sp].[steps] AS [HistogramSteps]
+FROM    [sys].[stats] [ss]
+        JOIN [sys].[objects] [so] ON [ss].[object_id] = [so].[object_id]
+        JOIN [sys].[schemas] [sch] ON [so].[schema_id] = [sch].[schema_id]
+        OUTER APPLY [sys].[dm_db_stats_properties]
+                              ([so].[object_id],[ss].[stats_id]) sp
+WHERE   [so].[type] = 'U'
+ORDER BY [sp].[last_updated] DESC;
+
+
+-- Statistics with more than 10% change
+SELECT
+    [sch].[name] + '.' + [so].[name] AS [TableName],
+    [ss].[name] AS [Statistic],
+    [ss].[auto_Created] AS [WasAutoCreated],
+    [ss].[user_created] AS [WasUserCreated],
+    [ss].[has_filter] AS [IsFiltered], 
+    [ss].[filter_definition] AS [FilterDefinition], 
+    [ss].[is_temporary] AS [IsTemporary],
+    [sp].[last_updated] AS [StatsLastUpdated], 
+    [sp].[rows] AS [RowsInTable], 
+    [sp].[rows_sampled] AS [RowsSampled], 
+    [sp].[unfiltered_rows] AS [UnfilteredRows],
+    [sp].[modification_counter] AS [RowModifications],
+    [sp].[steps] AS [HistogramSteps],
+    CAST(100 * [sp].[modification_counter] / [sp].[rows]
+                            AS DECIMAL(18,2)) AS [PercentChange]
+FROM [sys].[stats] [ss]
+JOIN [sys].[objects] [so] ON [ss].[object_id] = [so].[object_id]
+JOIN [sys].[schemas] [sch] ON [so].[schema_id] = [sch].[schema_id]
+OUTER APPLY [sys].[dm_db_stats_properties]
+                    ([so].[object_id], [ss].[stats_id]) sp
+WHERE [so].[type] = 'U'
+AND CAST(100 * [sp].[modification_counter] / [sp].[rows]
+                                        AS DECIMAL(18,2)) >= 10.00
+ORDER BY CAST(100 * [sp].[modification_counter] / [sp].[rows]
+                                        AS DECIMAL(18,2)) DESC;
 
