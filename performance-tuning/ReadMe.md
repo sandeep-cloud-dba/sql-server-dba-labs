@@ -31,6 +31,7 @@
     1. Ad-hoc queries with literal values  - SQL will complete the full optimization process and compile a new plan each time
     2. To avoid it better use Sprocs or parameterized queries
     3. Another way to optimize it use a server setting called "Optimize For Ad Hoc Workloads"
+	4. sp_executesql, use this to avoid the cache churn
 
 # Actions trigger recompile
     • changing the structure of a table, view or function referenced by the query
@@ -66,12 +67,12 @@
     Query with one of these operators may have to wait for available memory prior to execution, possibly adversly affecting the performance
 
 # Reading Plan
-    > Mostly the plans are read from righ to left and top to bottom (in the way data flows)
+    > Mostly the plans are read from right to left and top to bottom (in the way data flows)
     > But it is equally valid to read from left to right   (in the way operators are called)  
     > Like top operator and clustered index scan (where it is returning only the top values)
 
 # Estimated VS actual number of rows 
-    > all costs in plan are based on cardinality estimation (therefore these costs are only as accurate as the optimizers cardinality estimation)
+    > all costs in plan are based on cardinality estimation (therefore these costs are only as accurate as the optimizer's cardinality estimation)
 
 
 # Are Scan bad
