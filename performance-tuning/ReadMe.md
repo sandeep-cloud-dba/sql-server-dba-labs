@@ -6,17 +6,47 @@
     #A plan is no0longer valid after making changes to query (even a simple space)
     #Plan evaluation is a heuristic process.
 
-# The importance of statistics.
-    1. Execution plan is hevaily dependent on the Statistics
-    2. Eevery time the query is executed it does not read the data from the table to create execution plan, instead it uses the statistics that represent the entire data collection
-    3. The estimated cost of an execution plan depends largely on its cardinality estimations, in other words, its knowledge of how many rows are in a table, and its estimations of how many of those rows satisfy the various search and join conditions, and so on.
+ 
+# Cardinality Estimation (CE)
+	Definition
+	Cardinality Estimation (CE) is SQL Server's process of estimating how many rows each operator in an execution plan will process.
+	The optimizer uses these estimates to choose the lowest-cost execution plan.
+	
+# Why is CE important?
+	Almost every optimizer decision depends on Cardinality Estimation:
+	Seek vs Scan
+	Nested Loops vs Hash Match vs Merge Join
+	Memory Grant
+	Parallelism
+	Sort operations
+	Spool usage
+	Wrong estimates → Wrong execution plan → Poor performance
 
-# New cardinality estimator in SQL Server 2014
-    1. CardinalityEstimationModelVersion, is this is 70 or less then it is old cardinality and if it is more than 70 then it is an new.
+# SQL Server 2014 Cardinality Estimator
+	SQL Server 2014 introduced a new Cardinality Estimator (CE).
+	Previous CE remained unchanged since SQL Server 7.0.
+	Same query can produce different execution plans because of different row estimation logic.
     
     Plan Age=Estimated CPU cost for compiling the plan * numbr of time it has been used
     Plan age = 10 * 5 =  50 
 
+# The importance of statistics.
+	Definition
+	
+	Statistics are metadata (data about data) describing data distribution.
+	
+	SQL Server uses statistics to estimate:
+	
+	Number of rows
+	Selectivity
+	Data distribution
+	Cardinality
+	
+	Statistics are the primary input for Cardinality Estimation.
+
+    1. Execution plan is hevaily dependent on the Statistics
+    2. Eevery time the query is executed it does not read the data from the table to create execution plan, instead it uses the statistics that represent the entire data collection
+    3. The estimated cost of an execution plan depends largely on its cardinality estimations, in other words, its knowledge of how many rows are in a table, and its estimations of how many of those rows satisfy the various search and join conditions, and so on.
 
 # Manually Clearing Plan cache
     ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for single database
