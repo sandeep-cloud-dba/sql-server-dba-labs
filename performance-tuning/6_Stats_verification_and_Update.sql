@@ -1,7 +1,7 @@
 
 EXEC sp_helpindex "Sales.SalesOrderDetail"; --List of Indexes on table
 
-EXEC sp_helpstats 'Sales.SalesOrderDetail', 'ALL'; --All the Stats create on table
+EXEC sp_helpstats 'Sales.SalesOrderDetail', 'ALL'; --Check Information about the Statistics for a table
 
 DBCC SHOW_STATISTICS ("Sales.SalesOrderDetail",IX_SalesOrderDetail_ProductID); --Stats of Index
 
