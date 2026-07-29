@@ -1,6 +1,5 @@
 # Notes for Grant_Fritcheysql
     select * from sys.sql_modules -- check the code of SP
-    
     #Hash is created for a SQL Plan and stored in plan cache, 
     #Optimizer uses the hash to determine if the exists in plan cache and if it is valid.
     #A plan is no0longer valid after making changes to query (even a simple space)
