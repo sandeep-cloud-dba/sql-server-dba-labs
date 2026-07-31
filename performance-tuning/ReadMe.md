@@ -43,9 +43,92 @@
 	
 	Statistics are the primary input for Cardinality Estimation.
 
-    1. Execution plan is hevaily dependent on the Statistics
-    2. Eevery time the query is executed it does not read the data from the table to create execution plan, instead it uses the statistics that represent the entire data collection
+    1. Execution plan is heavily dependent on the Statistics
+    2. Every time the query is executed it does not read the data from the table to create execution plan, instead it uses the statistics that represent the entire data collection
     3. The estimated cost of an execution plan depends largely on its cardinality estimations, in other words, its knowledge of how many rows are in a table, and its estimations of how many of those rows satisfy the various search and join conditions, and so on.
+	4. Exists only for the leading (left-most) column
+
+# When SQL Server Creates Statistics
+	1. Index Statistics (Automatic)
+		Whenever an index is created:
+			SQL Server automatically creates an associated Statistics object.
+			Exists as long as the index exists.
+			
+	2. Index Rebuild
+	Index Rebuild recreates the index.
+	Therefore:
+		Statistics are automatically updated.
+		Uses FULLSCAN.
+	Therefore updating index statistics immediately after an Index Rebuild is usually unnecessary.
+	Only auto-created column statistics may still require updating.
+
+	3. Auto Create Statistics
+	If AUTO_CREATE_STATISTICS is enabled (default):
+	SQL Server automatically creates single-column statistics when
+		column is used in WHERE clause
+		column is used in JOIN
+		column is NOT already the leading column of an existing index.
+
+	4. Manual Statistics
+	Can be created using
+		CREATE STATISTICS
+	Supports
+		Single-column
+		Multi-column statistics
+
+	SQL Server automatically updates statistics if Auto Update Statistics is enabled and 500 + 20% (of total) modified rows
+
+	Modern SQL Server
+		Starting with SQL Server 2016 (or SQL Server 2014 SP1 with Trace Flag 2371, later enabled by default), the threshold becomes dynamic for large tables. 
+		Large tables no longer wait for a full 20% of rows to change before statistics are updated.
+	
+	Interview answer: Mention that SQL Server automatically updates statistics, but large tables use a dynamic threshold in modern versions.
+
+	This is the single most important takeaway from the chapter.
+			Statistics
+		        ↓
+		Cardinality Estimation
+		        ↓
+		Estimated Rows
+		        ↓
+		Execution Plan
+		        ↓
+		Performance
+
+		Statistics don't improve query performance directly; they improve the optimizer's row estimates, which leads to better execution plans.
+
+
+# Ascending Key Problem ⭐
+	Occurs when the leading index column continuously increases.
+	Examples
+		Identity
+		Date
+		DateTime
+	Example
+		OrderDate
+	
+	Statistics updated Sunday.
+	New rows inserted Monday–Saturday.
+	Histogram doesn't know about these new values.
+	Result
+	Estimated Rows
+		1
+	Actual Rows
+		5000
+
+	Large estimation errors.
+	Very common in OLTP systems.
+
+	Why Ascending Key Causes Problems
+	Histogram contains only existing values.
+	New values beyond histogram range are unknown.
+	Optimizer underestimates row count.
+		Leads to
+			Wrong Join
+			Wrong Memory Grant
+			Wrong Parallelism
+			TempDB Spill
+
 
 # Manually Clearing Plan cache
     ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE --remove all plans for single database
