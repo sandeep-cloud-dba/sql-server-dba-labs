@@ -55,32 +55,32 @@
 			Exists as long as the index exists.
 			
 	2. Index Rebuild
-	Index Rebuild recreates the index.
-	Therefore:
-		Statistics are automatically updated.
-		Uses FULLSCAN.
-	Therefore updating index statistics immediately after an Index Rebuild is usually unnecessary.
-	Only auto-created column statistics may still require updating.
+		Index Rebuild recreates the index.
+		Therefore:
+			Statistics are automatically updated.
+			Uses FULLSCAN.
+		Therefore updating index statistics immediately after an Index Rebuild is usually unnecessary.
+		Only auto-created column statistics may still require updating.
 
 	3. Auto Create Statistics
-	If AUTO_CREATE_STATISTICS is enabled (default):
-	SQL Server automatically creates single-column statistics when
-		column is used in WHERE clause
-		column is used in JOIN
-		column is NOT already the leading column of an existing index.
+		If AUTO_CREATE_STATISTICS is enabled (default):
+		SQL Server automatically creates single-column statistics when
+			column is used in WHERE clause
+			column is used in JOIN
+			column is NOT already the leading column of an existing index.
 
 	4. Manual Statistics
-	Can be created using
-		CREATE STATISTICS
-	Supports
-		Single-column
-		Multi-column statistics
-
-	SQL Server automatically updates statistics if Auto Update Statistics is enabled and 500 + 20% (of total) modified rows
-
-	Modern SQL Server
-		Starting with SQL Server 2016 (or SQL Server 2014 SP1 with Trace Flag 2371, later enabled by default), the threshold becomes dynamic for large tables. 
-		Large tables no longer wait for a full 20% of rows to change before statistics are updated.
+		Can be created using
+			CREATE STATISTICS
+		Supports
+			Single-column
+			Multi-column statistics
+	
+		SQL Server automatically updates statistics if Auto Update Statistics is enabled and 500 + 20% (of total) modified rows
+	
+		Modern SQL Server
+			Starting with SQL Server 2016 (or SQL Server 2014 SP1 with Trace Flag 2371, later enabled by default), the threshold becomes dynamic for large tables. 
+			Large tables no longer wait for a full 20% of rows to change before statistics are updated.
 	
 	Interview answer: Mention that SQL Server automatically updates statistics, but large tables use a dynamic threshold in modern versions.
 
