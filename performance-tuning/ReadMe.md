@@ -721,10 +721,15 @@ When is Merge Join Usually Chosen?
 		Now imagine:
 			Actual Number of Rows Read = 10,000
 			Actual Number of Rows for All execution = 10
-		That means SQL has to read 10000 rows to return 10 rows (🚩That should make you investigate things like a residual Predicate, whether the predicate is SARGable, 
+		That means SQL has to read 10000 rows to return 10 rows (🚩That should make you investigate things like a residual Predicate, whether the predicate is SARGable,
+		SQL Server had to read 10,000 rows to produce only 10 rows.
 		and whether the index keys are appropriate.)
+	14. Whenever you see TOP, immediately look for:
+			Estimated Number of Rows Without Row Goal
+			That property tells you:
+			"How many rows would SQL Server expect if TOP wasn't influencing this operator?"
 
-SQL Server had to read 10,000 rows to produce only 10 rows.
+
   
   
   # Question to be asked when evaluating the execution Plan
