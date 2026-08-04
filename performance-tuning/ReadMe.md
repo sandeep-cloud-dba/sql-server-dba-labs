@@ -728,6 +728,8 @@ When is Merge Join Usually Chosen?
 			Estimated Number of Rows Without Row Goal
 			That property tells you:
 			"How many rows would SQL Server expect if TOP wasn't influencing this operator?"
+	15. Every Operator  -  Check if it is a blocking operator or the streaming operator
+	
 
 
   
