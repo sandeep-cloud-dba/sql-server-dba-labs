@@ -715,6 +715,16 @@ When is Merge Join Usually Chosen?
     10. Scans vs Seeks  - (Seek Efficient when: retrieving small data sets Bad when: retrieving huge data sets repeatedly) & (Scan Efficient when: reading large           portions of table Bad when: returning very few rows)
     11. If there is any expensive operator first check "WHY IT IS THERE once clarified check is it really necessary"
 	12. If you see table spool, Check NodeID and PrimaryNodeID, suppose if the NodeID is 21 and PrimaryNodeID is 7 that means Node 21 is not newly created, it has been reused from 7
+	13. Easy rule to remember
+		Estimate accuracy: Estimated Rows for All Executions ↔ Actual Rows for All Executions
+		Reading efficiency: Actual Rows Read ↔ Actual Rows for All Executions
+		Now imagine:
+			Actual Number of Rows Read = 10,000
+			Actual Number of Rows for All execution = 10
+		That means SQL has to read 10000 rows to return 10 rows (🚩That should make you investigate things like a residual Predicate, whether the predicate is SARGable, 
+		and whether the index keys are appropriate.)
+
+SQL Server had to read 10,000 rows to produce only 10 rows.
   
   
   # Question to be asked when evaluating the execution Plan
