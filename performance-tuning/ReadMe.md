@@ -45,7 +45,8 @@
 
     1. Execution plan is heavily dependent on the Statistics
     2. Every time the query is executed it does not read the data from the table to create execution plan, instead it uses the statistics that represent the entire data collection
-    3. The estimated cost of an execution plan depends largely on its cardinality estimations, in other words, its knowledge of how many rows are in a table, and its estimations of how many of those rows satisfy the various search and join conditions, and so on.
+    3. The estimated cost of an execution plan depends largely on its cardinality estimations, in other words, its knowledge of how many rows are in a table, and its estimations 
+	   of how many of those rows satisfy the various search and join conditions, and so on.
 	4. Exists only for the leading (left-most) column
 
 # When SQL Server Creates Statistics
@@ -189,7 +190,8 @@
 
 # Are Scan bad
     1. If we need all or most rows from a table, a scan is often the most efficient operation and is not considered bad.
-    2. If SQL Server scans a very large number of rows to return only a few rows, it can become inefficient because of unnecessary IO and logical reads. This may happen due to:
+    2. If SQL Server scans a very large number of rows to return only a few rows, it can become inefficient because of 
+	   unnecessary IO and logical reads. This may happen due to:
         > missing or poor indexes
         > stale statistics
         > non-SARGable queries (functions or expressions on indexed columns)
