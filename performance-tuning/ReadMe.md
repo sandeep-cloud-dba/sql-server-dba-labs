@@ -295,7 +295,6 @@
     (Spool, Sort, TVF, Remote Query)
 
 Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
-
     <img width="766" height="533" alt="image" src="https://github.com/user-attachments/assets/803d71a5-f48c-4a28-ab3a-a2bedc027bb8" />
     <img width="688" height="797" alt="image" src="https://github.com/user-attachments/assets/ce2f5087-eef9-49b9-9f48-ab45dd4316d7" />
     <img width="484" height="675" alt="image" src="https://github.com/user-attachments/assets/1e22e08b-a72f-4437-ab24-c37d8d28622d" />
@@ -318,8 +317,9 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 # HASH MATCH (JOIN) -  In this operator
 
     Top Input -> Build (suppose return 290 rows)
-    Bottom Input -> probe (Suppose reurn 19614 rows)
-    Suppose SQL choose to perform the nested loop then 290 searches in 19614 rows would be expensive. Instead SQL will choose HASH MATCH (Buiold the hash table form smaller input and search it againt the bigger input)
+    Bottom Input -> probe (Suppose rerun 19614 rows)
+    Suppose SQL choose to perform the nested loop then 290 searches in 19614 rows would be expensive. Instead SQL will choose HASH MATCH 
+	(Buiold the hash table form smaller input and search it against the bigger input)
     Build - > SQL will create the hash table in memory with smaller input (in this case with 290 rows) and put them in bucket
     Probe -> SQL will reads table (with 19614 rows) one row at a time, it computes the hash value of joined column and compares, then reurs the rows
     
