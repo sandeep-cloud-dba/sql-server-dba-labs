@@ -315,20 +315,22 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
     Table Valued Function
     
 # HASH MATCH (JOIN) -  In this operator
-    Top Input -> Build (suppose return 290 rows)
+    
+	Top Input -> Build (suppose return 290 rows)
     Bottom Input -> probe (Suppose rerun 19614 rows)
     Suppose SQL choose to perform the nested loop then 290 searches in 19614 rows would be expensive. Instead SQL will choose 
 	HASH MATCH (Build the hash table form smaller input and search it against the bigger input)
     Build - > SQL will create the hash table in memory with smaller input (in this case with 290 rows) and put them in bucket
     Probe -> SQL will reads table (with 19614 rows) one row at a time, it computes the hash value of joined column and compares, then returns the rows
     
-Why Use Hash Match?
-	Case 1 -> Large table and Large table
-	Case 2 -> small table and Large Table 
-	Case 3 -> No Useful Indexes
+	Why Use Hash Match?
+		Case 1 -> Large table and Large table
+		Case 2 -> small table and Large Table 
+		Case 3 -> No Useful Indexes
 
 Why Is Hash Match Called Blocking?
-    Before producing the result (Hash match) must first build the hash table, So it must consume ALL build rows 
+    
+	Before producing the result (Hash match) must first build the hash table, So it must consume ALL build rows 
 
 Biggest Performance Problem
 
