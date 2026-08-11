@@ -328,47 +328,40 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 		Case 2 -> small table and Large Table 
 		Case 3 -> No Useful Indexes
 
-Why Is Hash Match Called Blocking?
-    
-	Before producing the result (Hash match) must first build the hash table, So it must consume ALL build rows 
+	Why Is Hash Match Called Blocking?
+		Before producing the result (Hash match) must first build the hash table, So it must consume ALL build rows 
 
-Biggest Performance Problem
+	Biggest Performance Problem
+	    Hash Match needs memory.
+	    Suppose optimizer estimates: Build Input = 1,000 rows, but reality is: Build Input = 1,000,000 rows. Hash table no longer fits in memory.
+	    SQL Server spills to TempDB. This becomes: Memory -> Disk Very Expensive
 
-    Hash Match needs memory.
-    Suppose optimizer estimates: Build Input = 1,000 rows, but reality is: Build Input = 1,000,000 rows. Hash table no longer fits in memory.
-    SQL Server spills to TempDB. This becomes: Memory -> Disk Very Expensive
+	When Hash Match May Indicate a Problem
+	    Missing Index
+	    Non-SARGable Query (WHERE YEAR(OrderDate)=2025)
+	    Implicit Conversion (WHERE IntColumn = '100')
+		
+	 Notes
+	    Hash Match Join
+	    Uses two inputs:
+	        Build Input (top)
+	        Probe Input (bottom)
+	    SQL Server:
+	        Builds hash table from smaller input
+	        Probes larger input for matches
+	    Best for:
+	        Large unsorted datasets
+	        Missing indexes
+	        Large joins
+	    Blocking operator: Must complete build phase first
+	    Main risk: Memory spill to TempDB
 
-When Hash Match May Indicate a Problem
-
-    Missing Index
-    Non-SARGable Query (WHERE YEAR(OrderDate)=2025)
-    Implicit Conversion (WHERE IntColumn = '100')
-
-Interview Notes
-   
-    Hash Match Join
-    Uses two inputs:
-        Build Input (top)
-        Probe Input (bottom)
-    SQL Server:
-        Builds hash table from smaller input
-        Probes larger input for matches
-    Best for:
-        Large unsorted datasets
-        Missing indexes
-        Large joins
-    Blocking operator:
-        Must complete build phase first
-    Main risk:
-        Memory spill to TempDB
-
-When you see a Hash Match in an execution plan, ask yourself:
-
-    Which input is Build?
-    Which input is Probe?
-    Why wasn't Nested Loops chosen?
-    Why wasn't Merge Join chosen?
-    Did the Hash Match spill to TempDB?
+	When you see a Hash Match in an execution plan, ask yourself:
+	    Which input is Build?
+	    Which input is Probe?
+	    Why wasn't Nested Loops chosen?
+	    Why wasn't Merge Join chosen?
+	    Did the Hash Match spill to TempDB?
 
 # MERGE JOIN
 
@@ -730,13 +723,19 @@ When is Merge Join Usually Chosen?
 			That property tells you:
 			"How many rows would SQL Server expect if TOP wasn't influencing this operator?"
 	15. Every Operator  -  Check if it is a blocking operator or the streaming operator
+	16. When you see a Hash Match in an execution plan, ask yourself:
+	    Which input is Build?
+	    Which input is Probe?
+	    Why wasn't Nested Loops chosen?
+	    Why wasn't Merge Join chosen?
+	    Did the Hash Match spill to TempDB?
 	
 
 
   
   
   # Question to be asked when evaluating the execution Plan
-    1. Why Strem / Hash Aggregate, Scan Seek etc
+    1. Why Stream / Hash Aggregate, Scan Seek etc
     2. Is Input already Ordered
     3. Could an Index eliminate the Hash Aggregate or Hash Match
     4. Is the predicate selective enough?
