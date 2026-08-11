@@ -262,11 +262,12 @@
 # Nested loop Join
 
     1.takes data from outer input and process against the inner input for each row. if the outer input returns 290 rows, 
-	  the inner input will be executed 290 times once for each row from outer input, 
-	  each execution of inner side performs the efficient seek using the value pushed form the outer input.
-    2. Nested loop is generally efficient when
+	  the inner input will be executed 290 times once for each row from outer input, each execution of inner side performs 
+	  the efficient seek using the value pushed form the outer input.
+    
+	2. Nested loop is generally efficient when
            Outer Input is small
-           Inner Put is indexed
+           Inner Input is indexed
            Matching rows can be found quickly using seeks
        
     4.A large Estimated vs Actual Rows difference doesn't automatically mean bad performance, but it is a strong clue 
@@ -275,18 +276,18 @@
             Stale or missing Statistics on predicate 
             Volume or distribution of data has been changed significantly since the last stats, on the column
             distribution in column may be non uniform
-            parameter sniffing may have occured
+            parameter sniffing may have occurred
        
     6. Nested loop properties - Outer References shows the values being pushed from the outer input to the inner input.
            Estimated vs Actual Rows
            Check for large discrepancies.  
-           Possible causes:
-           Missing statistics
-           Stale statistics
-           Skewed data distribution
-           Non-SARGable predicates
-           Parameter sniffing
-           Plan reuse issues
+        Possible causes:
+	           Missing statistics
+	           Stale statistics
+	           Skewed data distribution
+	           Non-SARGable predicates
+	           Parameter sniffing
+	           Plan reuse issues
 
 # Rebind and Rewinds
     Rebind = New Value = Re-execute
@@ -305,7 +306,6 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 
 
 # Opereator
-
     Below Operator Can save results from the previous execution (in this case only rebinds and rewinds are relevant)
     Index Spool
     Remote Query
@@ -315,22 +315,19 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
     Table Valued Function
     
 # HASH MATCH (JOIN) -  In this operator
-
     Top Input -> Build (suppose return 290 rows)
     Bottom Input -> probe (Suppose rerun 19614 rows)
-    Suppose SQL choose to perform the nested loop then 290 searches in 19614 rows would be expensive. Instead SQL will choose HASH MATCH 
-	(Buiold the hash table form smaller input and search it against the bigger input)
+    Suppose SQL choose to perform the nested loop then 290 searches in 19614 rows would be expensive. Instead SQL will choose 
+	HASH MATCH (Build the hash table form smaller input and search it against the bigger input)
     Build - > SQL will create the hash table in memory with smaller input (in this case with 290 rows) and put them in bucket
-    Probe -> SQL will reads table (with 19614 rows) one row at a time, it computes the hash value of joined column and compares, then reurs the rows
+    Probe -> SQL will reads table (with 19614 rows) one row at a time, it computes the hash value of joined column and compares, then returns the rows
     
 Why Use Hash Match?
-    
-    Case 1 -> Large table and Large table
-    Case 2 -> small table and Large Table 
-    Case 3 -> No Useful Indexes
+	Case 1 -> Large table and Large table
+	Case 2 -> small table and Large Table 
+	Case 3 -> No Useful Indexes
 
 Why Is Hash Match Called Blocking?
-    
     Before producing the result (Hash match) must first build the hash table, So it must consume ALL build rows 
 
 Biggest Performance Problem
