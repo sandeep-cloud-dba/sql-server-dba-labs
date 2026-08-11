@@ -261,15 +261,16 @@
    
 # Nested loop Join
 
-    1. takes data from outer input and process against the inner input for each row. if the outer input returns 290 rows, the inner input will be executed 290 times once for each row from outer input, 
-	   each execution of inner side performs the efficient seek using the value pushed form the outer input.
+    1.takes data from outer input and process against the inner input for each row. if the outer input returns 290 rows, 
+	  the inner input will be executed 290 times once for each row from outer input, 
+	  each execution of inner side performs the efficient seek using the value pushed form the outer input.
     2. Nested loop is generally efficient when
-    
            Outer Input is small
            Inner Put is indexed
            Matching rows can be found quickly using seeks
        
-    4. A large Estimated vs Actual Rows difference doesn't automatically mean bad performance, but it is a strong clue that the optimizer may have chosen a suboptimal plan. This Could be because of
+    4.A large Estimated vs Actual Rows difference doesn't automatically mean bad performance, but it is a strong clue 
+	  that the optimizer may have chosen a suboptimal plan. This Could be because of
     
             Stale or missing Statistics on predicate 
             Volume or distribution of data has been changed significantly since the last stats, on the column
@@ -277,7 +278,6 @@
             parameter sniffing may have occured
        
     6. Nested loop properties - Outer References shows the values being pushed from the outer input to the inner input.
-    
            Estimated vs Actual Rows
            Check for large discrepancies.  
            Possible causes:
@@ -289,7 +289,6 @@
            Plan reuse issues
 
 # Rebind and Rewinds
-
     Rebind = New Value = Re-execute
     Rewind = Same Value = Reuse Cached Result
     Only meaningful when inner operator can save results
