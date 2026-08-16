@@ -386,37 +386,37 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 	    Case 3: Sorted indexes exist on join columns
 
 # Adaptive Join
-What is Adaptive Join
-An Adaptive Join allows SQL Server to defer the final join choice until it has seen enough rows from the Build input.
-Need Bath Mode Plan
-Check Adaptive Join property to see which join was used
-Adaptive Join has Build Phase which stores top input rows in hash table.
-                 Adaptive Join
-                       |
-              reads Build input
-                       |
-                How many rows?
-						|
-			Compare it with Adaptive Join threshold 
-                  /         \
-             Less then     Greater than
-             threshold     Threshold
-				|              |
-          Nested Loops     Hash Match
-
-Why does SQL Server use Adaptive Join?
-The main reason is uncertainty in cardinality.
-
-The most important property —** Adaptive Threshold Rows**
-
-When you see an Adaptive Join, look at: Adaptive Threshold Rows (ex. Adaptive Threshold Rows = 50,000)
-	Actual Build rows < 50,000
-	        ↓
-	Nested Loops
+	What is Adaptive Join
+	An Adaptive Join allows SQL Server to defer the final join choice until it has seen enough rows from the Build input.
+	Need Bath Mode Plan
+	Check Adaptive Join property to see which join was used
+	Adaptive Join has Build Phase which stores top input rows in hash table.
+	                 Adaptive Join
+	                       |
+	              reads Build input
+	                       |
+	                How many rows?
+							|
+				Compare it with Adaptive Join threshold 
+	                  /         \
+	             Less then     Greater than
+	             threshold     Threshold
+					|              |
+	          Nested Loops     Hash Match
 	
-	Actual Build rows >= 50,000
-	        ↓
-	Hash Match
+	Why does SQL Server use Adaptive Join?
+	The main reason is uncertainty in cardinality.
+	
+	The most important property —** Adaptive Threshold Rows**
+	
+	When you see an Adaptive Join, look at: Adaptive Threshold Rows (ex. Adaptive Threshold Rows = 50,000)
+		Actual Build rows < 50,000
+		        ↓
+		Nested Loops
+		
+		Actual Build rows >= 50,000
+		        ↓
+		Hash Match
 
 # Sorting and Aggregating Data.
     Sort
