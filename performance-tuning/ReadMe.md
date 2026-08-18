@@ -429,6 +429,7 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
     ----------
     - Used with TOP + ORDER BY.
     - Returns only requested rows.
+	- above 100 rows more memory intensive mechanism are used, because CPU cost would be far too high
     
     Distinct Sort
     -------------
