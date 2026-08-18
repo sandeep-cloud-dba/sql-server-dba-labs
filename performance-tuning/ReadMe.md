@@ -435,6 +435,7 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
     -------------
     - Sorts rows and removes duplicates.
     - Duplicates become adjacent after sorting.
+	- then SQL removes the duplicate and return only distinct
     
     Sort Warning
     ------------
