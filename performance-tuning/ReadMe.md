@@ -545,101 +545,48 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
    
 
 # Table Spool
-	A Spool operator uses temporary worktable to store data that may need to be reused multiple times during execution plan. 
-    A Table Spool is a temporary work table that SQL Server creates in tempdb to store intermediate results for reuse.
-    "SQL Server doesn't want to repeatedly execute an expensive operation, so it stores the result and reuses it."
-    Example:
-    Nested Loops
-        |
-    Table Spool
-        |
-    Index Seek
-    
-    Instead of repeatedly performing the Index Seek, SQL Server stores the result in a spool and reuses it.
-    
-    Why SQL Server Uses It
-    Avoid repeated scans
-    Avoid repeated seeks
-    Support Nested Loop joins
-    Support recursive queries
-    Improve performance when data is reused
-  
-    DBA Perspective
-    When you see a Table Spool:
-    1. Why is SQL Server caching rows?
-    2. Is it compensating for a missing index?
-    3. Is tempdb being heavily used?
-    4. Can query rewriting eliminate the spool?
-        
-            Rebind:
-              Populate spool.
-            
-            Rewind:
-              Reuse rows from spool.
-        
-              Plan:
-        
-                Hash Aggregate
-                      ↓
-                Table Spool
-                      ↓
-                Nested Loops
-                
-                SalesPerson rows:
-                
-                1
-                1
-                1
-                2
-                3
-                4
-                4
-                5
-                6
-                6
-                7
-                8
-                9
-                10
-                First Execution
-                Rebind = 1
-                
-                SQL Server:
-                
-                Scan SalesOrderHeader
-                Hash Aggregate
-                Create Territory Totals
-                Store in Worktable
-                
-                Result:
-                
-                TerritoryID | TotalTax
-                ----------------------
-                1
-                2
-                3
-                ...
-                10
-                
-                stored once.
-                
-                Remaining Executions
-                Rewind = 13
-                
-                SQL Server:
-                
-                Reuse worktable
-                
-                No new scan.
-                No new aggregate
+	What is a Table Spool?
+		A Table Spool temporarily stores rows produced by an upstream operator so SQL Server can reuse those rows later instead of 
+		executing the upstream operation again.
+		
+		              Input
+		                ↓
+		          Table Spool
+		          /         \
+		       Store       Rewind/Re-read
+		                     ↓
+		                  Operator
+		
+		Why does SQL Server use Table Spool?
+		
+		The most important reason is: Avoid repeating expensive work.
+		Without the spool, SQL Server might have to execute the expensive operation repeatedly.
+		
+		Table Spool has two important behaviors
+		Rewind: SQL Server can reuse the rows already stored in the spool.
+		Rebind: SQL Server has to execute the child subtree again because the correlated value/input has changed.
+		
+		Then when is Table Spool a problem?
+		The production problem is usually when the cost of creating/maintaining/reading the spool outweighs its benefit.
+			A. Large number of rows: If the spool is storing millions of rows, it can become expensive.
+			B. High number of executions: A spool under a Nested Loops can potentially be executed many times.
+			C. Rebinds: Lots of Rebinds can mean SQL Server is repeatedly rebuilding the spool.
+			D. tempdb pressure: Large spools can contribute to tempdb activity.
+			E. Incorrect estimates
+		
+		Example: 
+			Rebinds = 10
+			Rewinds = 100,000
+			It means the spool was rebuilt 10 times but reused many times.
+			
+			Rebinds = 100,000
+			Rewinds = 0
+			Now you're potentially doing a lot of rebuilding, which deserves investigation.
 
-				What is a Table Spool?
-				Table Spool stores intermediate rows in a worktable (tempdb) so SQL Server can reuse them later instead of re-executing expensive operations.
-				Always check these 3 properties
-				Property			Why check?
-				NodeID				Identifies the spool that created the worktable.
-				PrimaryNodeID		Tells whether another spool is reusing that worktable.
-				Logical Operation	Identifies whether it is Lazy Spool or Eager Spool.
+			Note: 
+			if you see the second spool in plan.
+			if the second spool were to use the data from the first spool, then in the properties of the second spool..
+			you'll see both it's node id and primary node id(first spool)
 
 # Index Spool
     An Index Spool is similar to Table Spool, but SQL Server creates a temporary indexed structure in tempdb.
