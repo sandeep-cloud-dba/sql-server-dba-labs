@@ -510,29 +510,42 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 	   Aggregate functions don't always require a GROUP BY.
 	   Creating an index on the GROUP BY column may allow SQL Server to use a Stream Aggregate instead of a Hash Aggregate.
 
-        **Ordered Input
-          ↓
-    Stream Aggregate
-    
-    Unordered Input
-          ↓
-    Hash Aggregate
-          OR
-    Sort + Stream Aggregate
-    
-    Unordered Input
-      ↓
-    Optimizer evaluates
-    
-    Option A:
-    Sort + Stream Aggregate
-    
-    Option B:
-    Hash Aggregate
-    
-    Chooses cheaper option**
+	        **Ordered Input
+	          ↓
+	    Stream Aggregate
+	    
+	    Unordered Input
+	          ↓
+	    Hash Aggregate
+	          OR
+	    Sort + Stream Aggregate
+	    
+	    Unordered Input
+	      ↓
+	    Optimizer evaluates
+	    
+	    Option A:
+	    Sort + Stream Aggregate
+	    
+	    Option B:
+	    Hash Aggregate
+	    
+	    Chooses cheaper option**
+# Spools
+	1. A Spool operator uses temporary worktable to store data that may need to be reused multiple times during execution plan
+	2. Spools such as Index, Table, Windows
+	3. Index Spool will have an additional nonclustered index to make it easier to retrieve the data.
+	4. Two Logical type of Spool Operator
+	   a. Lazy Spool
+	      	1. Streaming operator
+	      	2. requests row from child node, stores it and passes it to it's parent operator
+	   b. Eager Spool
+			1. Blocking operator
+	   	  	2. call it's child node	until it has all the rows, and only then return the first row from its worktable
+   
 
 # Table Spool
+	A Spool operator uses temporary worktable to store data that may need to be reused multiple times during execution plan. 
     A Table Spool is a temporary work table that SQL Server creates in tempdb to store intermediate results for reuse.
     "SQL Server doesn't want to repeatedly execute an expensive operation, so it stores the result and reuses it."
     Example:
