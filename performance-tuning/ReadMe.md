@@ -443,13 +443,38 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
     - Caused by insufficient memory grant.
     - Often due to poor cardinality estimates.
     - SQL calculates memory grant based on Estimated Row and Estimated Row Size 
-    - For Exampple Estimated Rows = 10,000, Memory allocated for 10,000 rows, Actual Rows = 75,000 (Memory becomes insufficient), sort -> tempdb spill
+    - For Example Estimated Rows = 10,000, Memory allocated for 10,000 rows, Actual Rows = 75,000 (Memory becomes insufficient), sort -> tempdb spill
     
     Troubleshooting:
     Scan -> Compute Scalar -> Filter -> Sort
     
     Find first operator where
     Estimated Rows ≠ Actual Rows.
+
+			AGGREGATE FUNCTIONS
+			COUNT / SUM / AVG / MIN / MAX
+			             ↓
+			       SQL needs aggregation
+			             ↓
+			      Optimizer chooses
+			             ↓
+			    ┌────────┴─────────┐
+			    ↓                  ↓
+			Stream Aggregate   Hash Aggregate
+			    │                  │
+			    │                  │
+			Input is ordered   Input doesn't need
+			by grouping key    to be ordered
+			    │                  │
+			    │                  │
+			Can use existing   Builds hash table
+			index ordering     to maintain groups
+			    │
+			If input isn't ordered
+			    ↓
+			Sort
+			    ↓
+			Stream Aggregate
 
     Stream Aggregate 
         Requires ordered input.
@@ -475,7 +500,15 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
         
         Can spill to TempDB if memory grant is insufficient.
 
-       NOTE: Creating an index on the GROUP BY column may allow SQL Server to use a Stream Aggregate instead of a Hash Aggregate.
+       NOTE: 
+	   Aggregation operators are used for queries involving grouping and/or aggregate functions.
+	   	COUNT()
+		SUM()
+		AVG()
+		MIN()
+		MAX()
+	   Aggregate functions don't always require a GROUP BY.
+	   Creating an index on the GROUP BY column may allow SQL Server to use a Stream Aggregate instead of a Hash Aggregate.
 
         **Ordered Input
           ↓
