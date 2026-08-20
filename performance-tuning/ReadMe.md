@@ -544,6 +544,7 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 	   	  	2. call it's child node	until it has all the rows, and only then return the first row from its worktable
 	
 	Characteristic	Table Spool	Index Spool
+	
 	<img width="1087" height="176" alt="image" src="https://github.com/user-attachments/assets/2071419e-cd62-48bc-92e2-5f66ebf3c006" />
 
 	
