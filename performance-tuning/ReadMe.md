@@ -542,13 +542,15 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 	   b. Eager Spool
 			1. Blocking operator
 	   	  	2. call it's child node	until it has all the rows, and only then return the first row from its worktable
+Characteristic	Table Spool	Index Spool
+Structure	Stores intermediate rows as an unordered heap in tempdb.	Builds a temporary clustered or nonclustered B-Tree index on the intermediate rows in tempdb.
+Search Mechanism	Scans the cached rows sequentially.	Performs seeks directly on specific key values in the cached index.
+Common Use Case	When data needs to be scanned multiple times or isolated from mutations (e.g., updates, recursive CTEs).	Often appears on the inner side of a Nested Loops Join when the inner input lacks a suitable index for fast seeks.
+Resource Impact	Incurs standard tempdb write/read I/O.	Incurs extra CPU and tempdb overhead during the build phase to create and sort the index.
 
-			Characteristic	Table Spool	Index Spool
-	Structure	Stores intermediate rows as an unordered heap in tempdb.	Builds a temporary clustered or nonclustered B-Tree index on the intermediate rows in tempdb.
-	Search Mechanism	Scans the cached rows sequentially.	Performs seeks directly on specific key values in the cached index.
-	Common Use Case	When data needs to be scanned multiple times or isolated from mutations (e.g., updates, recursive CTEs).	Often appears on the inner side of a Nested Loops Join when the inner input lacks a suitable index for fast seeks.
-	Resource Impact	Incurs standard tempdb write/read I/O.	Incurs extra CPU and tempdb overhead during the build phase to create and sort the index.
-	<img width="1087" height="176" alt="image" src="https://github.com/user-attachments/assets/35a506fe-2f56-4b64-96c4-f3e0b38b6c8d" />
+<img width="1087" height="176" alt="image" src="https://github.com/user-attachments/assets/2071419e-cd62-48bc-92e2-5f66ebf3c006" />
+
+	
 
    
 
