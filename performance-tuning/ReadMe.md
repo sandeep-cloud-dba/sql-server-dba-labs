@@ -592,112 +592,105 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 			you'll see both it's node id and primary node id(first spool)
 
 # Index Spool
-    An Index Spool is similar to Table Spool, but SQL Server creates a temporary indexed structure in tempdb.
-    
-    Why SQL Server Uses It
-        Suppose SQL Server repeatedly searches rows using a particular key.
-        Instead of scanning repeatedly:
-        Create temporary index
-               ↓
-        Perform fast lookups
-
-    DBA Interpretation
-        When you see Index Spool:
-        Often SQL Server is saying:
-        "I wish I had a proper permanent index."
-
-    Frequent Index Spools often indicate:
-        Missing indexes
-        Poor indexing strategy
-        Suboptimal query design
-
-            Rebind:
-              Populate spool for new key.
-            
-            Rewind:
-              Reuse previously cached value(s)
-              through indexed lookup.
-        
-                  Plan:
-        
-                Index Seek
-                     ↓
-                Stream Aggregate
-                     ↓
-                Index Spool
-                     ↓
-                Nested Loops
-                
-                SalesPerson rows:
-                
-                1
-                1
-                1
-                2
-                3
-                4
-                4
-                5
-                6
-                6
-                7
-                8
-                9
-                10
-                
-                Distinct Territories:
-                
-                1,2,3,4,5,6,7,8,9,10
-                
-                Total:
-                
-                10 distinct values
-                TerritoryID = 1
-                Rebind
-                
-                Execute:
-                
-                Index Seek
-                Stream Aggregate
-                Store result in Index Spool
-                TerritoryID = 1 again
-                Rewind
-                
-                Reuse cached result.
-                
-                No seek.
-                
-                No aggregate.
-                
-                TerritoryID = 2
-                Rebind
-                
-                New value.
-                
-                Need new seek.
-                
-                Need new aggregate.
-                
-                Store result.
-                
-                Final counts:
-                
-                10 distinct TerritoryIDs
-                
-                Therefore:
-                
-                10 Rebinds
-                
-                and
-                
-                14 total rows
-                -10 distinct rows
-                ----------------
-                4 Rewinds
+    1. What is an Index Spool?
+		An Index Spool builds a temporary index over rows produced by its child operator, allowing SQL Server to efficiently search those rows later.
+		
+		Think:
+		Table Spool = temporarily store rows
+		Index Spool = temporarily store rows + build an index on them
+		
+		       Child Operator
+		             ↓
+		      Index Spool
+		       ┌─────────┐
+		       │Temp Index│
+		       └─────────┘
+		             ↓
+		       Efficient lookup
+			   
+		Why does SQL Server use an Index Spool?
+		SQL Server repeatedly needs to search data, but it doesn't have a suitable permanent index.
+		
+		Suppose the inner data doesn't have an appropriate index.
+		
+		SQL Server has two broad choices:
+		
+		Without Index Spool
+			Outer row 1 → Scan inner
+			Outer row 2 → Scan inner
+			Outer row 3 → Scan inner
+			...
+			Outer row 10,000 → Scan inner
+		
+		That can be terrible.
+		
+		With Index Spool
+			Inner Scan
+				↓
+			Build temporary index
+				↓
+			Index Spool
+				↓
+			Nested Loops performs lookups
+		
+		Now SQL Server can search the temporary indexed structure rather than repeatedly scanning the original data.
+		
+		
+		Why can Index Spool be expensive?
+		Building an index isn't free.
+		
+		SQL Server has to:
+		
+			Read rows
+			   ↓
+			Build temporary index
+			   ↓
+			Store it
+			   ↓
+			Maintain it
+			   ↓
+			Perform lookups
+		
+		So if SQL Server only uses the spool a few times, the cost of creating it may not be worthwhile.
+		
+		For example:
+		
+			Build Index Spool = 500 ms
+		
+			Reuse it = 2 times
+		Maybe not very beneficial.
+		
+		But:
+			Build Index Spool = 500 ms
+		
+			Reuse it = 100,000 times
+		
+		Now the investment may be worthwhile.
+		
+		Is Index Spool bad?
+		No.
+		
+		An Index Spool can be a very smart optimization.
+		
+		For Example
+			Without spool:
+		
+			500,000 × Scan
+				   ↓
+			Huge amount of work
+		
+		
+			With Index Spool:
+		
+			One scan
+			   ↓
+			Build temporary index
+			   ↓
+			500,000 efficient lookups
+			
+		The Index Spool could dramatically improve performance.
 
 # Execution Plans for Data Modifications
-
-
 
 
 
