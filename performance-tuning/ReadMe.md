@@ -778,6 +778,19 @@ Clustered Index Seek / Index Seek normally show 0 Rebinds and 0 Rewinds.
 	Q.3: Why Scan? ( and not seek)
 	Q.4: Is SQL reading too much?
 
-
+# What I especially want you to focus on
+	| Focus                        | Question to ask                                                |
+	| ---------------------------- | -------------------------------------------------------------- |
+	| **Estimated vs Actual Rows** | Is SQL Server estimating correctly?                            |
+	| **Access method**            | Why Seek? Why Scan?                                            |
+	| **Join choice**              | Why Nested Loops / Hash / Merge?                               |
+	| **Join inputs**              | Which side is the outer/inner input?                           |
+	| **Lookups**                  | Why does SQL need to go back to the base table?                |
+	| **Sorts**                    | Why does SQL need to sort?                                     |
+	| **Spools**                   | Why is SQL Server temporarily storing/reusing data?            |
+	| **Memory**                   | Is there a memory grant issue or spill?                        |
+	| **Warnings**                 | Are there spills, implicit conversions, missing indexes, etc.? |
+	| **Predicate**                | Is filtering happening early or late?                          |
+	| **SARGability**              | Can SQL Server efficiently use the index?                      |
 
 
