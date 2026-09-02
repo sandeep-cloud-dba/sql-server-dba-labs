@@ -3,6 +3,21 @@ EXEC sp_helpindex "Sales.SalesOrderDetail"; --List of Indexes on table
 
 EXEC sp_helpstats 'Sales.SalesOrderDetail', 'ALL'; --Check Information about the Statistics for a table
 
+--check the stats of each column
+SELECT
+    s.name AS StatisticName,
+    c.name AS ColumnName,
+    sc.stats_column_id
+FROM sys.stats AS s
+JOIN sys.stats_columns AS sc
+    ON s.object_id = sc.object_id
+   AND s.stats_id = sc.stats_id
+JOIN sys.columns AS c
+    ON sc.object_id = c.object_id
+   AND sc.column_id = c.column_id
+WHERE s.object_id = OBJECT_ID('Sales.SalesOrderDetail')
+ORDER BY s.name, sc.stats_column_id;
+
 DBCC SHOW_STATISTICS ("Sales.SalesOrderDetail",IX_SalesOrderDetail_ProductID); --Stats of Index for table
 
 --Stats information on a table
