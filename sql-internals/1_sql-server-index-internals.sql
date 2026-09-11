@@ -43,3 +43,28 @@ ORDER BY
     , previous_page_page_id;                -- Then order by previous-page linkage
 GO
 
+--Inspecting Index Pages Using DBCC IND --individual pages belonging to a table and its indexes.
+CREATE TABLE #DBCCIND
+(
+    PageFID INT,
+    PagePID INT,
+    IAMFID INT,
+    IAMPID INT,
+    ObjectID INT,
+    IndexID INT,
+    PartitionNumber INT,
+    PartitionID BIGINT,
+    iam_chain_type VARCHAR(100),
+    PageType INT,
+    IndexLevel INT,
+    NextPageFID INT,
+    NextPagePID INT,
+    PrevPageFID INT,
+    PrevPagePID INT
+);
+
+INSERT INTO #DBCCIND
+EXEC ('DBCC IND(''IndexInternals'', ''dbo.Person'', 0)');  
+
+select * from #DBCCIND
+
