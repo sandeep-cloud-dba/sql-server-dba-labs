@@ -40,3 +40,5 @@
   11. Therefore:
       NCI depends on the base table's structure,
       but NCI does not determine the base table's structure.
+
+      A nonclustered index is a separate B-tree whose leaf contains the indexed data plus a locator to the base row; that locator is a RID for a heap or the clustering key for a clustered table.
