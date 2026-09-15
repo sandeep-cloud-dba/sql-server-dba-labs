@@ -80,6 +80,9 @@
     9. Query Optimizer cares about the presence/properties of
        the unique index, not whether it was created directly
        or created to support a constraint.
+
+        Constraint = rule you want to enforce.
+        Index = physical structure SQL Server uses to enforce it and/or access the data efficiently.
     
     10. Uniqueness provides useful cardinality information to
         the optimizer because a unique predicate can return
