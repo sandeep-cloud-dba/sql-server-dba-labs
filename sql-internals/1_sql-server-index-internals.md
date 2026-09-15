@@ -1,6 +1,5 @@
 
 # Nonclustered B-Tree Indexes
-
   1. All indexes have:
      - Leaf level
      - One or more non-leaf levels
