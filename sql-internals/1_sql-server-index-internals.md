@@ -90,3 +90,61 @@
 
         Constraint = rule you want to enforce.
         Index = physical structure SQL Server uses to enforce it and/or access the data efficiently.
+
+# CREATE INDEX Options
+    1. IGNORE_DUP_KEY
+    
+    - Applies to UNIQUE indexes.
+    - Does NOT allow duplicate values.
+    - Controls what happens when a duplicate is encountered
+      during a multi-row INSERT.
+    - With IGNORE_DUP_KEY = ON:
+        - Duplicate row is discarded.
+        - Other nonduplicate rows can be inserted.
+    - Without it:
+        - Duplicate key violation causes the statement to abort.
+    
+    Key idea:
+    IGNORE_DUP_KEY changes duplicate-handling behavior,
+    not the uniqueness property of the index.
+    
+    
+    2. STATISTICS_NORECOMPUTE
+    
+    - Controls automatic statistics updates for an index/statistic.
+    - Normally AUTO_UPDATE_STATISTICS updates statistics when needed.
+    - STATISTICS_NORECOMPUTE can prevent automatic updates
+      for a specific index/statistic.
+    - Stale statistics can lead to inaccurate cardinality estimates
+      and potentially less-optimal execution plans.
+    - Statistics can be updated manually using:
+        UPDATE STATISTICS
+        sp_updatestats
+    
+    
+    3. MAXDOP
+    
+    - Controls the maximum degree of parallelism for index creation.
+    - MAXDOP specifies the maximum number of processors/workers,
+      not necessarily the number actually used.
+    - SQL Server can choose fewer processors depending on system load.
+    - Parallel index creation can improve index build performance.
+    - Parallel workers can build separate portions of the index,
+      so actual page usage may differ from theoretical calculations.
+    
+    
+    4. Index Placement
+    
+    CREATE INDEX supports:
+    
+    ON filegroup_name
+    
+    or
+    
+    ON partition_scheme_name(column_name)
+    
+    - Determines where the index is stored.
+    - An index can be placed on a specific filegroup.
+    - An index can also be partitioned using a partition scheme.
+    - If placement isn't specified, default filegroup behavior applies.
+
