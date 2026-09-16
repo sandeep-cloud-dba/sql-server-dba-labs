@@ -148,3 +148,32 @@
     - An index can also be partitioned using a partition scheme.
     - If placement isn't specified, default filegroup behavior applies.
 
+# Physical Structure of B-Tree Index Pages
+
+    - SQL Server pages are fixed at 8 KB (8,192 bytes).
+    - Index pages have a 96-byte page header.
+    - An offset/slot array exists at the end of the page and uses 2 bytes per row.
+    - A nonclustered index can use:
+      - IN_ROW_DATA
+      - ROW_OVERFLOW_DATA
+      - LOB_DATA
+    
+    ### Index Row Structure
+    
+    Index rows are similar to data rows but have some differences.
+    
+    Index row:
+    1. TagA / Status Bits A
+    2. Fixed-length data (Fdata)
+    3. Ncol
+    4. NULL bitmap (only when applicable)
+    5. VarCount (if variable-length columns exist)
+    6. VarOffset (if variable-length columns exist)
+    7. VarData
+    
+    Important differences:
+    - Index rows cannot preserve SPARSE storage representation.
+    - Nonunique clustered indexes can use a hidden uniquifier for duplicate clustering-key values.
+    - Index rows don't use the Fsize row-header field.
+    - Instead, pminlen in the page header is used to determine the end of fixed-length data.
+    - Ncol and NULL bitmap are present in index rows when nullable columns require them.
