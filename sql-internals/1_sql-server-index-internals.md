@@ -87,3 +87,6 @@
     10. Uniqueness provides useful cardinality information to
         the optimizer because a unique predicate can return
         at most one row.
+
+        Constraint = rule you want to enforce.
+        Index = physical structure SQL Server uses to enforce it and/or access the data efficiently.
