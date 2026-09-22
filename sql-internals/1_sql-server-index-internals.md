@@ -177,3 +177,60 @@
     - Index rows don't use the Fsize row-header field.
     - Instead, pminlen in the page header is used to determine the end of fixed-length data.
     - Ncol and NULL bitmap are present in index rows when nullable columns require them.
+
+# Clustered Index Physical Structure
+    ### Clustered Index Leaf
+    
+    - The leaf level of a clustered index is the actual table data.
+    - Unlike a nonclustered index, the clustered leaf does not contain a separate row locator to the base table.
+    - A clustered index can be nonunique.
+    - When duplicate clustering-key values exist, SQL Server uses a hidden 4-byte uniquifier to distinguish rows internally.
+    
+    ### Non-leaf Clustered Index Rows
+    
+    Each non-leaf row contains:
+    
+    - Index key
+    - 6-byte child-page pointer
+      - 2 bytes = FileID
+      - 4 bytes = PageID
+    - Row overhead
+    
+    The 6-byte pointer identifies a page, so no slot number is required.
+    
+    ### B-tree Navigation
+    
+    Each non-leaf level contains an entry for every page at the level below.
+    
+    Example:
+    
+    4,000 leaf pages
+    → 4,000 entries at Level 1
+    → 7 Level-1 pages
+    → 7 entries at Level 2
+    → 1 root page
+    
+    The key in a non-leaf entry represents the first possible key value for the referenced child page.
+    
+    It is a navigation boundary, not necessarily the exact current first row on the page.
+    
+    ### Clustered Index Seek
+    
+    For:
+    
+    WHERE EmployeeID = 27682
+    
+    SQL Server:
+    
+    1. Starts at the root.
+    2. Uses the clustering key to choose the appropriate child page.
+    3. Continues through intermediate levels.
+    4. Reaches the leaf/data page.
+    5. Finds the requested row.
+    
+    Example:
+    
+    Root Page 234
+    → Intermediate Page 235
+    → Leaf/Data Page 1616
+    → EmployeeID 27682
