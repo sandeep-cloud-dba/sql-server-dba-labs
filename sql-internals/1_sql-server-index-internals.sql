@@ -68,3 +68,15 @@ EXEC ('DBCC IND(''IndexInternals'', ''dbo.Person'', 0)');
 
 select * from #DBCCIND
 
+
+--See data on page
+DBCC PAGE (<DBName>, <FileID>, PageID, 3);
+GO
+
+DBCC PAGE (IndexInternals, 1, 1616, 3);
+GO
+
+DBCC TRACEON(3604);
+GO
+DBCC PAGE (IndexInternals, 1, 1616, 3);
+GO
