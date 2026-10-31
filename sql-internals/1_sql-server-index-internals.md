@@ -229,8 +229,155 @@
     5. Finds the requested row.
     
     Example:
+
+
+
+    # Clustering Key Dependency
+
+    ## 1. Importance of Clustering Key Selection
     
-    Root Page 234
-    → Intermediate Page 235
-    → Leaf/Data Page 1616
-    → EmployeeID 27682
+    Choosing a clustered index is not just about improving the performance of one query.
+    
+    The clustering key becomes a dependency of every nonclustered index because SQL Server uses it as the row locator to identify rows in the clustered index.
+    
+    A good clustering key should generally be:
+    
+    * **Unique:** Uniqueness avoids the need for an internal uniquifier.
+    * **Narrow:** Reduces storage overhead in every nonclustered index.
+    * **Stable:** Avoids frequent updates to the clustering key.
+    * **Increasing (where appropriate):** Can reduce random page splits for insert-heavy workloads.
+    
+    The best clustering key ultimately depends on the workload.
+    
+    ## 2. Clustered Index and Data Organization
+    
+    When a clustered index is created, the existing table data becomes the leaf level of the clustered index.
+    
+    * The leaf level contains the actual table data.
+    * Rows are logically ordered according to the clustering key.
+    * Leaf pages are maintained through a doubly linked page chain.
+    * The page chain maintains logical order, not necessarily physical disk contiguity.
+    
+    A table can have only one clustered index because it can have only one clustered ordering of its data.
+    
+    ### Example: Person.Person
+    
+    ```text
+    PK_Person_BusinessEntityID
+               |
+               v
+         Clustered Index
+               |
+               v
+    BusinessEntityID = Clustering Key
+    ```
+    
+    ## 3. Nonclustered Index Dependency on Clustering Key
+    
+    A nonclustered index is a separate B-tree structure.
+    
+    Its leaf level contains:
+    
+    1. Defined nonclustered index key columns.
+    2. Included columns, if any.
+    3. Row locator.
+    
+    The row locator depends on the underlying table structure:
+    
+    | Table Structure | Row Locator    | Lookup Operator |
+    | --------------- | -------------- | --------------- |
+    | Clustered table | Clustering key | Key Lookup      |
+    | Heap            | RID            | RID Lookup      |
+    
+    ### Conceptual NCI Structure
+    
+    ```text
+    Nonclustered Index Leaf
+    |
+    |-- Defined index key columns
+    |
+    |-- Included columns (if any)
+    |
+    |-- Row locator
+          |
+          |-- Clustering key (clustered table)
+          |
+          |-- RID (heap)
+    ```
+    
+    ## 4. Covering Index and Key Lookup
+    
+    If a query requires only columns available in the nonclustered index, SQL Server can return the results directly from the NCI without accessing the clustered index.
+    
+    This is called a **Covering Index**.
+    
+    Important points:
+    
+    * The clustering key is already available in the NCI as the row locator.
+    * It can be returned without performing a Key Lookup.
+    * If a required column is missing from the NCI, SQL Server may perform a Key Lookup to retrieve it from the clustered index.
+    * The optimizer decides whether the lookup is cost-effective.
+    
+    ### Example
+    
+    ```sql
+    CREATE CLUSTERED INDEX CX_Employee
+    ON Employee(EmployeeID);
+    
+    CREATE NONCLUSTERED INDEX IX_Employee_LastName
+    ON Employee(LastName);
+    ```
+    
+    Query:
+    
+    ```sql
+    SELECT EmployeeID, LastName
+    FROM Employee
+    WHERE LastName = 'Smith';
+    ```
+    
+    Both requested columns are available in the NCI.
+    
+    Therefore, SQL Server can satisfy the query without a Key Lookup.
+    
+    ## 5. Nonunique Clustered Index and Uniquifier
+    
+    The nonclustered index key does not have to be unique.
+    
+    However, the row locator must uniquely identify the corresponding base-table row.
+    
+    If a clustered index is nonunique and duplicate clustering-key values exist, SQL Server adds a hidden 4-byte uniquifier when necessary.
+    
+    Conceptually:
+    
+    ```text
+    Effective Clustering Key
+              =
+    Clustering Key + Uniquifier
+    ```
+    
+    This allows SQL Server to distinguish rows having duplicate clustering-key values.
+    
+    ## 6. Why Clustering Key Width Matters
+    
+    All columns making up the clustering key are carried into each nonclustered index as the row locator.
+    
+    Therefore:
+    
+    * A wider clustering key increases NCI storage requirements.
+    * More storage can increase memory requirements.
+    * Larger indexes can require more page reads.
+    * Index maintenance can become more expensive.
+    
+    A narrow clustering key can reduce overhead across all nonclustered indexes.
+    
+    ## Key Takeaway
+    
+    The clustering key is not just responsible for organizing the clustered index. It also acts as the row locator in every nonclustered index on that clustered table.
+    
+    Therefore, clustering-key selection affects the storage, maintenance and performance characteristics of the entire index architecture.
+    
+        Root Page 234
+        → Intermediate Page 235
+        → Leaf/Data Page 1616
+        → EmployeeID 27682
