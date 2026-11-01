@@ -1,4 +1,19 @@
- --Inspecting the Physical Structure and B-Tree Levels of an Index
+--Index IDs 
+ USE IndexInternals;
+GO
+
+SELECT
+    name AS IndexName,
+    index_id AS IndexID,
+    type_desc AS IndexType,
+    is_unique AS IsUnique,
+    is_primary_key AS IsPrimaryKey
+FROM sys.indexes
+WHERE object_id = OBJECT_ID(N'dbo.EmployeeHeap')
+ORDER BY index_id;
+GO
+
+--Inspecting the Physical Structure and B-Tree Levels of an Index
 SELECT 
       index_depth AS D
     , index_level AS L
