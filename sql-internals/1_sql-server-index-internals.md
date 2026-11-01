@@ -232,7 +232,7 @@
 
 
 
-    # Clustering Key Dependency
+# Clustering Key Dependency
 
     ## 1. Importance of Clustering Key Selection
     
