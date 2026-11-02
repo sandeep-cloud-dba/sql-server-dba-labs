@@ -13,6 +13,35 @@ WHERE object_id = OBJECT_ID(N'dbo.EmployeeHeap')
 ORDER BY index_id;
 GO
 
+--Verify the Index Key Columns
+ USE IndexInternals;
+GO
+
+SELECT
+    I.name AS IndexName,
+    I.index_id AS IndexID,
+    I.is_unique AS IsUnique,
+    C.name AS ColumnName,
+    CASE
+        WHEN IC.is_included_column = 1 THEN 'Included Column'
+        ELSE 'Index Key Column'
+    END AS ColumnType,
+    IC.key_ordinal AS KeyOrdinal
+FROM sys.indexes AS I
+JOIN sys.index_columns AS IC
+    ON I.object_id = IC.object_id
+   AND I.index_id = IC.index_id
+JOIN sys.columns AS C
+    ON IC.object_id = C.object_id
+   AND IC.column_id = C.column_id
+WHERE I.object_id = OBJECT_ID(N'dbo.Employee')
+  AND I.type IN (1, 2)
+ORDER BY
+    I.index_id,
+    IC.is_included_column,
+    IC.key_ordinal;
+GO
+ 
 --Inspecting the Physical Structure and B-Tree Levels of an Index
 SELECT 
       index_depth AS D
