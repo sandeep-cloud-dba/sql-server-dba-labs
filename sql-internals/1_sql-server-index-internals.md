@@ -676,3 +676,97 @@
     Use INCLUDE columns to cover additional query requirements without expanding the index key.
 
 
+# Filtered Nonclustered Indexes
+
+    ## 1. What is a Filtered Index?
+    
+    A filtered index is a nonclustered index that contains entries only for rows satisfying a specified filter predicate.
+    
+    By default, a nonclustered index contains an index entry for every row in the table.
+    
+    A filtered index reduces the number of index entries by indexing only the rows matching the filter condition.
+    
+    ### Syntax
+    
+    ```sql
+    CREATE NONCLUSTERED INDEX IX_Employee_SSN
+    ON dbo.Employee (SSN)
+    WHERE SSN IS NOT NULL;
+    ```
+    
+    ## 2. Benefits of Filtered Indexes
+    
+    * Reduces index size by indexing only selected rows.
+    * Reduces storage requirements.
+    * Can reduce index maintenance overhead.
+    * Can improve query performance when queries access only the filtered subset.
+    * Supports enforcing uniqueness for a selected subset of rows.
+    
+    ## 3. Important Use Cases
+    
+    ### Use Case 1: Columns Containing Mostly NULL Values
+    
+    When a column contains mostly NULL values and queries retrieve only non-NULL rows, a filtered index can be useful.
+    
+    ```sql
+    CREATE NONCLUSTERED INDEX IX_Employee_SSN_NotNull
+    ON dbo.Employee (SSN)
+    WHERE SSN IS NOT NULL;
+    ```
+    
+    This index contains entries only for rows where SSN is NOT NULL.
+    
+    It can be particularly useful with SPARSE columns.
+    
+    ### Use Case 2: Enforcing Uniqueness for Selected Rows
+    
+    Requirement:
+    
+    * Multiple rows can have NULL SSN values.
+    * Every non-NULL SSN must be unique.
+    
+    ```sql
+    CREATE UNIQUE NONCLUSTERED INDEX UX_Employee_SSN_NotNull
+    ON dbo.Employee (SSN)
+    WHERE SSN IS NOT NULL;
+    ```
+    
+    A filtered unique index:
+    
+    * Allows multiple NULL values because those rows are excluded.
+    * Enforces uniqueness for all non-NULL SSN values.
+    
+    ### Use Case 3: Indexing a Specific Data Range
+    
+    If queries frequently retrieve a specific date range, a filtered index can focus on that subset.
+    
+    Example: Q4 2011 sales.
+    
+    ```sql
+    CREATE NONCLUSTERED INDEX IX_Sales_Q4_2011
+    ON dbo.Sales (SalesDate)
+    WHERE SalesDate >= '20111001'
+      AND SalesDate < '20120101';
+    ```
+    
+    Only rows matching the date filter are included in the index.
+    
+    ## 4. Important Points
+    
+    * Filtered indexes are nonclustered indexes.
+    * The leaf level contains entries only for rows matching the filter predicate.
+    * The filter column does not necessarily need to be an index key or included column.
+    * A filtered index can be UNIQUE.
+    * Filtered indexes can reduce storage and maintenance overhead.
+    * The query predicate must be compatible with the filter definition for SQL Server to use the index.
+    * A filtered index is most useful when queries frequently access a relatively small subset of table rows.
+    
+    ## 5. Key Takeaway
+    
+    A regular nonclustered index indexes the entire table.
+    
+    A filtered nonclustered index indexes only rows matching a specified predicate.
+    
+    Use filtered indexes when queries repeatedly access a specific subset of data rather than the entire table.
+
+
