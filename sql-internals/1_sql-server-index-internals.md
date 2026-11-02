@@ -654,7 +654,15 @@
     * Included columns do not count towards the index key column limit.
     * Included columns can help eliminate Key Lookups.
     * Adding included columns increases leaf-level storage requirements.
-    
+
+     ## Index Key Limitations
+        | Limitation                  | SQL Server 2014 and earlier | SQL Server 2016 and later |
+        | --------------------------- | --------------------------: | ------------------------: |
+        | Clustered index key size    |                   900 bytes |                 900 bytes |
+        | Nonclustered index key size |                   900 bytes |               1,700 bytes |
+        | Maximum key columns         |                          16 |                        32 |
+        | Maximum included columns    |                       1,023 |                     1,023 |
+
     ## 5. Covering Index
     
     A covering index contains all columns required by a query.
