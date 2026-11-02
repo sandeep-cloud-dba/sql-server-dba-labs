@@ -381,3 +381,85 @@
         → Intermediate Page 235
         → Leaf/Data Page 1616
         → EmployeeID 27682
+
+
+# Nonclustered Index on a Heap
+    When a nonclustered index is created on a heap, its leaf-level rows contain:
+    
+    1. Defined nonclustered index key columns.
+    2. RID (Row Identifier) as the row locator.
+    
+    ### RID Structure
+    
+    A RID uniquely identifies a physical row in a heap.
+    
+    * FileID: 2 bytes
+    * PageID: 4 bytes
+    * SlotNumber: 2 bytes
+    * Total: 8 bytes
+    
+    ### Example
+    
+    ```sql
+    CREATE NONCLUSTERED INDEX IX_EmployeeHeap_EmployeeID
+    ON EmployeeHeap(EmployeeID);
+    ```
+    
+    Conceptual leaf structure:
+    
+    ```text
+    Nonclustered Index Leaf
+    |
+    |-- EmployeeID (Index Key)
+    |
+    |-- RID (Row Locator)
+          |
+          |-- FileID
+          |-- PageID
+          |-- SlotNumber
+    ```
+    
+    ### Row Lookup Process
+    
+    1. SQL Server searches the nonclustered index.
+    2. Finds the matching index key.
+    3. Retrieves the corresponding RID.
+    4. Uses the RID to locate the heap data page and slot.
+    5. Retrieves the actual data row.
+    
+    ### Important
+    
+    * Nonclustered index on a heap uses RID as the row locator.
+    * Nonclustered index on a clustered table uses the clustering key as the row locator.
+    * A lookup from an NCI to a heap is performed using a RID Lookup operator when the execution plan requires retrieving missing columns.
+    
+    ### Physical Row-Size Example
+    
+    For an index on EmployeeID:
+    
+    * EmployeeID = 4 bytes
+    * RID = 8 bytes
+    * Row overhead = 1 byte
+    
+    Total = 13 bytes.
+    
+    ````
+    
+    ---
+    
+    ### Quick knowledge check
+    
+    One question before we move further:
+    
+    Suppose we create a nonclustered index on a heap using `EmployeeID`.
+    
+    ```sql
+    CREATE NONCLUSTERED INDEX IX_EmployeeHeap_EmployeeID
+    ON EmployeeHeap(EmployeeID);
+    ````
+    
+    **What happens if we physically move a heap row to another page?**
+    
+    Think about what happens to its RID and the corresponding nonclustered index entry.
+
+
