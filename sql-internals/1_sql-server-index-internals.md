@@ -462,4 +462,12 @@
     
     Think about what happens to its RID and the corresponding nonclustered index entry.
 
+    Forwarded record: When an update makes a heap row too large for its original page, SQL Server may move the row and leave a forwarding record at the original location. 
+    The RID in the NCI can continue pointing to the original location, which forwards SQL Server to the new location.
+    Other row movement: When SQL Server relocates a row without retaining a forwarding record, the affected nonclustered index row locator must be maintained.
+    
+    We'll study forwarded records separately.
+    
+    Key takeaway: A RID identifies a physical location, not a permanent logical identity. This is an important difference between heap and clustered-table row locators.
+
 
