@@ -519,3 +519,59 @@
     * A wider clustering key increases the storage requirements of nonclustered indexes.
     * If all required query columns are available in the NCI, SQL Server can avoid a Key Lookup.
 
+
+# Unique vs Nonunique Nonclustered Indexes on a Clustered Table
+
+    The clustering key is used as the row locator in every nonclustered index on a clustered table.
+    
+    However, its physical role differs depending on whether the NCI is unique or nonunique.
+    
+    ## 1. Nonunique Nonclustered Index
+    
+    Example:
+    
+    ```sql
+    CREATE NONCLUSTERED INDEX IX_Employee_LastName
+    ON Employee(LastName);
+    ```
+    
+    Assume the clustered index is on EmployeeID.
+    
+    Conceptually, the NCI key becomes:
+    
+    ```text
+    LastName + EmployeeID
+    ```
+    
+    * LastName is the explicitly defined NCI key.
+    * EmployeeID is added to the key when necessary.
+    * The clustering key helps uniquely identify NCI entries.
+    
+    ## 2. Unique Nonclustered Index
+    
+    Example:
+    
+    ```sql
+    CREATE UNIQUE NONCLUSTERED INDEX IX_Employee_SSN
+    ON Employee(SSN);
+    ```
+    
+    Assume the clustered index is on EmployeeID.
+    
+    Conceptually:
+    
+    ```text
+    NCI Key: SSN
+    Row Locator: EmployeeID
+    ```
+    
+    * SSN is already unique.
+    * EmployeeID is still required to locate the corresponding clustered row.
+    * Missing clustering-key columns are stored at the leaf level as nonkey row-locator columns.
+    
+    ## Key Takeaway
+    
+    * Nonunique NCI: Missing clustering-key columns become part of the NCI key.
+    * Unique NCI: Missing clustering-key columns are stored as row-locator columns at the leaf level.
+    * If clustering-key columns already exist in the NCI key, SQL Server does not store them twice.
+
