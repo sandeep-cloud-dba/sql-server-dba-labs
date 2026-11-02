@@ -471,3 +471,51 @@
     Key takeaway: A RID identifies a physical location, not a permanent logical identity. This is an important difference between heap and clustered-table row locators.
 
 
+# Nonclustered Index on a Clustered Table
+
+    When a nonclustered index is created on a clustered table, its leaf-level rows contain:
+    
+    1. Defined nonclustered index key columns.
+    2. Clustering key columns as the row locator.
+    3. Included columns, if any.
+    
+    ### Example
+    
+    Clustered Index:
+    
+    ```sql
+    CREATE UNIQUE CLUSTERED INDEX CX_Employee
+    ON Employee(EmployeeID);
+    ```
+    
+    Nonclustered Index:
+    
+    ```sql
+    CREATE UNIQUE NONCLUSTERED INDEX IX_Employee_SSN
+    ON Employee(SSN);
+    ```
+    
+    Conceptual NCI leaf structure:
+    
+    ```text
+    Nonclustered Index Leaf
+    |
+    |-- SSN (NCI Key)
+    |
+    |-- EmployeeID (Clustering Key / Row Locator)
+    ```
+    
+    ### Key Lookup Process
+    
+    1. SQL Server searches the NCI using the index key.
+    2. Retrieves the clustering key from the NCI.
+    3. Uses the clustering key to locate the row in the clustered index.
+    4. Retrieves any required columns missing from the NCI.
+    
+    ### Important Points
+    
+    * The clustering key is implicitly available in every NCI on a clustered table as its row locator.
+    * If the NCI key and clustering key share columns, SQL Server stores common columns only once.
+    * A wider clustering key increases the storage requirements of nonclustered indexes.
+    * If all required query columns are available in the NCI, SQL Server can avoid a Key Lookup.
+
