@@ -522,9 +522,9 @@
 
 # Unique vs Nonunique Nonclustered Indexes on a Clustered Table
 
-    The clustering key is used as the row locator in every nonclustered index on a clustered table.
+    When a nonclustered index is created on a clustered table, SQL Server uses the clustering key as the row locator.
     
-    However, its physical role differs depending on whether the NCI is unique or nonunique.
+    However, how the clustering key is stored depends on whether the NCI is UNIQUE or NONUNIQUE.
     
     ## 1. Nonunique Nonclustered Index
     
@@ -537,15 +537,14 @@
     
     Assume the clustered index is on EmployeeID.
     
-    Conceptually, the NCI key becomes:
+    Conceptually, the NCI leaf contains:
     
     ```text
-    LastName + EmployeeID
+    LastName (key)       -- Explicit NCI key
+    EmployeeID (key)     -- Clustering key
     ```
     
-    * LastName is the explicitly defined NCI key.
-    * EmployeeID is added to the key when necessary.
-    * The clustering key helps uniquely identify NCI entries.
+    EmployeeID is added to the effective NCI key to uniquely identify index entries.
     
     ## 2. Unique Nonclustered Index
     
@@ -558,20 +557,64 @@
     
     Assume the clustered index is on EmployeeID.
     
-    Conceptually:
+    Conceptually, the NCI leaf contains:
     
     ```text
-    NCI Key: SSN
-    Row Locator: EmployeeID
+    SSN (key)       -- Explicit unique NCI key
+    EmployeeID      -- Clustering key / Row Locator
     ```
     
-    * SSN is already unique.
-    * EmployeeID is still required to locate the corresponding clustered row.
-    * Missing clustering-key columns are stored at the leaf level as nonkey row-locator columns.
+    SSN is already unique, so EmployeeID does not need to become part of the NCI key.
+    
+    However, EmployeeID is still required to locate the corresponding row in the clustered index.
+    
+    ## 3. How to Identify Using DBCC PAGE
+    
+    Inspect the leaf-level page of each NCI using:
+    
+    ```sql
+    DBCC TRACEON(3604);
+    GO
+    
+    DBCC PAGE (IndexInternals, 1, <PageID>, 3);
+    GO
+    ```
+    
+    Interpret the output:
+    
+    **Nonunique NCI:**
+    
+    ```text
+    LastName (key)
+    EmployeeID (key)
+    ```
+    
+    Both participate in the effective NCI key.
+    
+    **Unique NCI:**
+    
+    ```text
+    SSN (key)
+    EmployeeID
+    ```
+    
+    EmployeeID is present as the row locator, not as an additional NCI key column.
+    
+    ## 4. Comparison
+    
+    | Property             | Nonunique NCI             | Unique NCI  |
+    | -------------------- | ------------------------- | ----------- |
+    | Explicit NCI key     | LastName                  | SSN         |
+    | Clustering key       | EmployeeID                | EmployeeID  |
+    | Clustering key role  | Part of effective NCI key | Row locator |
+    | DBCC PAGE indication | EmployeeID (key)          | EmployeeID  |
+    
+    Note: If a clustering-key column is already present in the NCI key, SQL Server stores it only once.
     
     ## Key Takeaway
     
-    * Nonunique NCI: Missing clustering-key columns become part of the NCI key.
-    * Unique NCI: Missing clustering-key columns are stored as row-locator columns at the leaf level.
-    * If clustering-key columns already exist in the NCI key, SQL Server does not store them twice.
+    * Nonunique NCI: Missing clustering-key columns become part of the effective NCI key.
+    * Unique NCI: Missing clustering-key columns are stored as row locators at the leaf level.
+    * The clustering key is required in both cases to identify the corresponding clustered row.
+
 
