@@ -617,4 +617,54 @@
     * Unique NCI: Missing clustering-key columns are stored as row locators at the leaf level.
     * The clustering key is required in both cases to identify the corresponding clustered row.
 
+# Nonclustered Indexes with Included Columns (INCLUDE)
+
+    ## 1. Purpose
+    
+    The INCLUDE clause allows additional columns to be stored at the leaf level of a nonclustered index without making them part of the index key.
+    
+    It is useful for creating covering indexes and eliminating Key Lookups.
+    
+    ## 2. Example
+    
+    ```sql
+    CREATE NONCLUSTERED INDEX IX_Employee_LastName
+    ON Employee(LastName)
+    INCLUDE (FirstName, SSN);
+    ```
+    
+    ## 3. Physical Structure
+    
+    Assuming EmployeeID is the clustering key:
+    
+    ```text
+    NCI Leaf Level
+    |
+    |-- LastName       (Index Key)
+    |-- EmployeeID     (Clustering Key / Row Locator)
+    |-- FirstName      (Included Column)
+    |-- SSN            (Included Column)
+    ```
+    
+    ## 4. Important Points
+    
+    * Index key columns participate in the B-tree's sort order.
+    * Included columns exist only at the leaf level.
+    * Included columns do not participate in index key ordering.
+    * Included columns do not count towards the index key column limit.
+    * Included columns can help eliminate Key Lookups.
+    * Adding included columns increases leaf-level storage requirements.
+    
+    ## 5. Covering Index
+    
+    A covering index contains all columns required by a query.
+    
+    SQL Server can retrieve the required information directly from the nonclustered index without accessing the clustered index.
+    
+    ### Key Takeaway
+    
+    Use index key columns for searching, sorting and navigation.
+    
+    Use INCLUDE columns to cover additional query requirements without expanding the index key.
+
 
