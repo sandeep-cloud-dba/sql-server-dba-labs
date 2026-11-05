@@ -974,8 +974,102 @@
             ) AS IsPersisted;
         ```
         
-        ## 5. Key Takeaway
+        DBA Takeaway
+            Deterministic does not mean precise.
+            
+            PERSISTED controls physical storage.
+            
+            IsPrecise identifies whether the expression is exact.
+            
+            DECIMAL generally provides precise arithmetic, whereas FLOAT and REAL are approximate.
+
+
+    # Exercise 4 – Indexed Views
+    
+        ## 1. Normal View vs Indexed View
         
-        An imprecise computed column involving FLOAT or REAL must be PERSISTED before it can be used as an index key.
+        | Normal View | Indexed View |
+        |---          |---           |
+        | Stores query definition | Stores query definition and materialized data |
+        | No separate result rows | Result rows physically stored |
+        | No clustered index required | First index must be UNIQUE CLUSTERED |
+        | No automatic result maintenance needed | Automatically maintained during underlying DML |
         
-        PERSISTED controls physical storage; it does not change the precision of the expression.
+        ## 2. Requirements
+        
+        - Use `WITH SCHEMABINDING`.
+        - Reference tables using two-part names.
+        - First index must be a UNIQUE CLUSTERED INDEX. (SQL Server needs a unique key to identify each materialized view row.
+            The unique clustered index establishes the physical storage structure for the view.
+            Additional nonclustered indexes can be created afterward.)
+        - Use `COUNT_BIG(*)` when GROUP BY is used.
+        
+        ## 3. Practical Example
+        
+        ```sql
+        USE AdventureWorks;
+        GO
+        
+        CREATE VIEW dbo.vProductSales
+        WITH SCHEMABINDING
+        AS
+        SELECT
+            ProductID,
+            SUM(UnitPrice * OrderQty) AS TotalSales,
+            COUNT_BIG(*) AS TotalOrders
+        FROM Sales.SalesOrderDetail
+        GROUP BY ProductID;
+        GO
+        
+        CREATE UNIQUE CLUSTERED INDEX IX_vProductSales_ProductID
+        ON dbo.vProductSales(ProductID);
+        GO
+        ```
+        
+        ## 4. Verify Index Metadata
+        
+        ```sql
+        SELECT
+            name,
+            index_id,
+            type_desc,
+            is_unique
+        FROM sys.indexes
+        WHERE object_id = OBJECT_ID('dbo.vProductSales');
+        ```
+        
+        ## 5. Physical Storage
+        
+        Inspected using:
+        - `sys.dm_db_database_page_allocations`
+        - `DBCC PAGE`
+        
+        Observed leaf-level record:
+        
+        | Column | Physical Length |
+        |---|---:|
+        | ProductID | 4 bytes |
+        | TotalSales | 8 bytes |
+        | TotalOrders | 8 bytes |
+        
+        Example observation:
+        - ProductID = 707
+        - TotalOrders = 3083
+        
+        This confirms that indexed view results are physically stored in the clustered index leaf pages.
+        
+        ## 6. Index Maintenance
+        
+        When underlying table data changes:
+        - SQL Server automatically maintains the indexed view.
+        - Aggregated values are updated.
+        - Additional write overhead is introduced.
+        
+        ## 7. DBA Takeaway
+        
+        An indexed view physically materializes query results using a unique clustered index.
+        
+        It can improve read performance for expensive aggregations but introduces additional DML maintenance overhead.
+
+
+
