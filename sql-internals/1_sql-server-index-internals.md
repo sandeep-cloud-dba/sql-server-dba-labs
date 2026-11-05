@@ -771,660 +771,211 @@
 
 # Indexes on Computed Columns and Indexed Views
 
-    ## 1. Logical vs. Physical Data
-    
-    Without indexes:
-    
-    * A normal computed column is calculated when accessed, unless marked `PERSISTED`.
-    * A normal view stores only its SELECT definition, not the result data.
-    
-    Creating indexes can physically materialize these logical values.
-    
-    | Object          | Without index            | With index                            |
-    | --------------- | ------------------------ | ------------------------------------- |
-    | Computed column | Calculated when accessed | Computed value stored in index        |
-    | View            | Stores SELECT definition | View result stored in clustered index |
-    
-    **Important:** An index on a non-persisted computed column stores the computed value in the index, but not in the base table.
-    
-    ---
-    
-    ## 2. Prerequisites for Indexing
-    
-    SQL Server requires three categories of conditions:
-    
-    1. Required session-level SET options.
-    2. Restrictions on functions used in expressions.
-    3. Requirements on underlying tables (indexed views only).
-    
-    ## 3. Required SET Options
-    
-    | SET option              | Required value |
-    | ----------------------- | -------------- |
-    | CONCAT_NULL_YIELDS_NULL | ON             |
-    | QUOTED_IDENTIFIER       | ON             |
-    | ANSI_NULLS              | ON             |
-    | ANSI_PADDING            | ON             |
-    | ANSI_WARNINGS           | ON             |
-    | NUMERIC_ROUNDABORT      | OFF            |
-    | ARITHABORT              | ON             |
-    
-    All options must be ON except NUMERIC_ROUNDABORT.
-    
-    Incorrect settings can result in:
-    
-    * Index creation failure.
-    * Data modification failure.
-    * Indexed view or computed-column index being ignored during SELECT queries.
-    
-    ### Checking SET Options
-    
-    ```sql
-    SELECT
-        SESSIONPROPERTY('ANSI_NULLS') AS ANSI_NULLS,
-        SESSIONPROPERTY('ANSI_PADDING') AS ANSI_PADDING,
-        SESSIONPROPERTY('ANSI_WARNINGS') AS ANSI_WARNINGS,
-        SESSIONPROPERTY('ARITHABORT') AS ARITHABORT,
-        SESSIONPROPERTY('CONCAT_NULL_YIELDS_NULL') AS CONCAT_NULL_YIELDS_NULL,
-        SESSIONPROPERTY('QUOTED_IDENTIFIER') AS QUOTED_IDENTIFIER,
-        SESSIONPROPERTY('NUMERIC_ROUNDABORT') AS NUMERIC_ROUNDABORT;
-    ```
-    
-    Return values:
-    
-    * 1 = ON
-    * 0 = OFF
-    
-    You can also check several settings using `sys.dm_exec_sessions`:
-    
-    ```sql
-    SELECT
-        quoted_identifier,
-        arithabort,
-        ansi_warnings,
-        ansi_padding,
-        ansi_nulls,
-        concat_null_yields_null
-    FROM sys.dm_exec_sessions
-    WHERE session_id = @@SPID;
-    ```
-    
-    `NUMERIC_ROUNDABORT` is not available in this DMV output. Use `SESSIONPROPERTY` to check it.
-    
-    ---
-    
-    ## 4. Deterministic and Nondeterministic Functions
-    
-    ### Deterministic
-    
-    A function is deterministic when it always returns the same result for the same input values.
-    
-    Examples:
-    
-    ```sql
-    SELECT ABS(-100);
-    SELECT UPPER('sandeep');
-    ```
-    
-    ### Nondeterministic
-    
-    A function is nondeterministic when it can return different results for the same input values.
-    
-    Examples:
-    
-    ```sql
-    SELECT GETDATE();
-    SELECT NEWID();
-    ```
-    
-    ### Why does determinism matter?
-    
-    SQL Server must guarantee consistent values for indexed computed columns and indexed views.
-    
-    Nondeterministic functions cannot be used in these indexed expressions.
-    
-    The same restrictions apply to user-defined functions.
-    
-    ### Checking function determinism
-    
-    ```sql
-    SELECT OBJECTPROPERTY(
-        OBJECT_ID('dbo.YourFunction'),
-        'IsDeterministic'
-    );
-    ```
-    
-    Results:
-    
-    * 1 = Deterministic
-    * 0 = Nondeterministic
-    
-    ---
-    
-    ## 5. Precision and Imprecision
-    
-    Determinism and precision are two different concepts.
-    
-    * Deterministic: Same inputs produce the same result.
-    * Precise: The expression does not involve approximate numerical behaviour.
-    
-    Expressions involving `FLOAT` and `REAL` are considered imprecise.
-    
-    This is because their results may vary across different processor architectures or implementations.
-    
-    An imprecise computed value can be used as an index key when it is physically stored rather than recomputed.
-    
-    This is where `PERSISTED` becomes important.
-    
-    ---
-    
-    ## 6. Schema Binding
-    
-    Schema binding is required when creating indexed views.
-    
-    It protects the underlying table structure from incompatible schema changes.
-    
-    ### Example
-    
-    ```sql
-    CREATE VIEW dbo.vw_Employee
-    WITH SCHEMABINDING
-    AS
-    SELECT
-        EmployeeID,
-        Salary
-    FROM dbo.Employee;
-    ```
-    
-    Important points:
-    
-    * All referenced tables must use two-part names (`schema.object`).
-    * Underlying tables or referenced columns cannot be changed incompatibly while the view is schema-bound.
-    * The view must be dropped or altered before making incompatible schema changes.
-    * If the underlying table has a different owner, the creator may need REFERENCES permission.
-    
-    ---
-    
-    # 7. Indexes on Computed Columns
-    
-    SQL Server allows indexes on computed columns when the requirements are satisfied:
-    
-    1. The expression must be deterministic.
-    2. The expression must be precise, or the computed column must be persisted if imprecise.
-    3. The resulting data type must be indexable.
-    4. Required SET options must be correct.
-    
-    LOB data types such as `text`, `varchar(max)`, and `xml` cannot be used as index key data types.
-    
-    A qualifying computed column can be:
-    
-    * An index key.
-    * An included column.
-    * Part of a PRIMARY KEY or UNIQUE constraint, subject to the applicable requirements.
-    
-    ### Example 1: Deterministic computed column
-    
-    ```sql
-    CREATE TABLE dbo.Employee
-    (
-        EmployeeID INT,
-        Salary DECIMAL(10,2),
-        Bonus AS (Salary * 0.10)
-    );
-    GO
-    
-    CREATE NONCLUSTERED INDEX IX_Employee_Bonus
-    ON dbo.Employee(Bonus);
-    GO
-    ```
-    
-    The expression is deterministic because the same Salary value always produces the same Bonus.
-    
-    ### Example 2: Nondeterministic computed column
-    
-    ```sql
-    CREATE TABLE dbo.t2
-    (
-        a INT,
-        b DATETIME,
-        c AS DATENAME(MM, b)
-    );
-    GO
-    
-    CREATE INDEX i2
-    ON dbo.t2(c);
-    GO
-    ```
-    
-    This index creation fails because `DATENAME()` can return different month names depending on the language setting.
-    
-    ### Checking computed-column properties
-    
-    Check whether a column is computed:
-    
-    ```sql
-    SELECT COLUMNPROPERTY(
-        OBJECT_ID('dbo.t2'),
-        'c',
-        'IsComputed'
-    );
-    ```
-    
-    Check determinism:
-    
-    ```sql
-    SELECT COLUMNPROPERTY(
-        OBJECT_ID('dbo.t2'),
-        'c',
-        'IsDeterministic'
-    );
-    ```
-    
-    Check indexability:
-    
-    ```sql
-    SELECT COLUMNPROPERTY(
-        OBJECT_ID('dbo.t2'),
-        'c',
-        'IsIndexable'
-    );
-    ```
-    
-    Check precision:
-    
-    ```sql
-    SELECT COLUMNPROPERTY(
-        OBJECT_ID('dbo.t2'),
-        'c',
-        'IsPrecise'
-    );
-    ```
-    
-    Results generally return:
-    
-    * 1 = Yes
-    * 0 = No
-    
-    `IsIndexable` is a useful quick check, but it does not explain why a column is not indexable.
-    
-    ---
-    
-    ## 8. Physical Implementation of Computed Columns
-    
-    When an index is created on a computed column, the computed value physically exists in the leaf level of that index.
-    
-    Example:
-    
-    ```sql
-    CREATE TABLE dbo.Employee
-    (
-        EmployeeID INT,
-        Salary INT,
-        Bonus AS (Salary * 0.10)
-    );
-    GO
-    
-    CREATE NONCLUSTERED INDEX IX_Employee_Bonus
-    ON dbo.Employee(Bonus);
-    GO
-    ```
-    
-    Conceptual NCI leaf structure:
-    
-    | Bonus (key) | Row locator |
-    | ----------- | ----------- |
-    | 5000        | EmployeeID  |
-    | 6000        | EmployeeID  |
-    | 7000        | EmployeeID  |
-    
-    The computed value is physically stored in the nonclustered index.
-    
-    When the underlying Salary column changes, SQL Server recalculates Bonus and maintains the affected index entry.
-    
-    ### Important distinction
-    
-    | Scenario                  | Base table | NCI leaf |
-    | ------------------------- | ---------- | -------- |
-    | Non-persisted, no index   | Not stored | No index |
-    | Non-persisted, with index | Not stored | Stored   |
-    | Persisted, no index       | Stored     | No index |
-    | Persisted, with index     | Stored     | Stored   |
-    
-    Creating an index does not automatically make a computed column PERSISTED.
-    
-    ---
-    
-    ## 9. Persisted Computed Columns
-    
-    A computed column marked `PERSISTED` stores its computed value physically in the base table.
-    
-    Example:
-    
-    ```sql
-    CREATE TABLE dbo.Employee
-    (
-        EmployeeID INT,
-        Salary DECIMAL(10,2),
-        Bonus AS (Salary * 0.10) PERSISTED
-    );
-    ```
-    
-    ### Why use PERSISTED?
-    
-    One important use case is computed expressions involving `FLOAT` and `REAL`.
-    
-    The book demonstrates this with the Northwind Order Details table.
-    
-    The Discount column is of type REAL.
-    
-    First, create the computed column:
-    
-    ```sql
-    ALTER TABLE [Order Details]
-    ADD Final AS
-    (
-        (Quantity * UnitPrice)
-        - Discount * (Quantity * UnitPrice)
-    );
-    GO
-    ```
-    
-    Attempt to create an index:
-    
-    ```sql
-    CREATE INDEX OD_Final_Index
-    ON [Order Details](Final);
-    GO
-    ```
-    
-    The operation fails because the computed column is imprecise and not persisted.
-    
-    ### Solution
-    
-    ```sql
-    ALTER TABLE [Order Details]
-    DROP COLUMN Final;
-    GO
-    
-    ALTER TABLE [Order Details]
-    ADD Final AS
-    (
-        (Quantity * UnitPrice)
-        - Discount * (Quantity * UnitPrice)
-    ) PERSISTED;
-    GO
-    
-    CREATE INDEX OD_Final_Index
-    ON [Order Details](Final);
-    GO
-    ```
-    
-    Now SQL Server can index the persisted imprecise computed column.
-    
-    ### Checking precision
-    
-    ```sql
-    SELECT COLUMNPROPERTY(
-        OBJECT_ID('dbo.Employee'),
-        'Bonus',
-        'IsPrecise'
-    );
-    ```
-    
-    The book also explains that computed columns used as partitioning columns must explicitly be marked PERSISTED, whether precise or imprecise.
-    
-    ---
-    
-    # 10. Indexed Views
-    
-    An indexed view is similar to a materialized view in other database systems.
-    
-    A normal view stores a SELECT definition.
-    
-    An indexed view physically stores the result data.
-    
-    One important use case is precomputing aggregate results from large tables.
-    
-    For example, calculating total sales per product from millions of sales records can be expensive.
-    
-    An indexed view can store the precomputed aggregate values.
-    
-    ### First index requirement
-    
-    The first index created on a view must be a UNIQUE CLUSTERED INDEX.
-    
-    Why?
-    
-    The clustered index leaf level contains the actual data rows.
-    
-    Therefore, creating a unique clustered index physically materializes the view's result data.
-    
-    ---
-    
-    ## 11. Additional Restrictions on Indexed Views
-    
-    The following are restricted in indexed view definitions according to the book:
-    
-    | Restricted element           |
-    | ---------------------------- |
-    | TOP                          |
-    | LOB columns                  |
-    | DISTINCT                     |
-    | MIN                          |
-    | MAX                          |
-    | COUNT(*)                     |
-    | COUNT(expression)            |
-    | STDEV                        |
-    | VARIANCE                     |
-    | AVG                          |
-    | SUM on a nullable expression |
-    | Derived tables               |
-    | ROWSET function              |
-    | Another view                 |
-    | UNION                        |
-    | Subqueries                   |
-    | OUTER JOINs                  |
-    | Self-joins                   |
-    | Full-text predicates         |
-    | COMPUTE                      |
-    | COMPUTE BY                   |
-    | ORDER BY                     |
-    
-    ### GROUP BY requirements
-    
-    If the view contains GROUP BY:
-    
-    1. The SELECT list must include `COUNT_BIG(*)`.
-    2. HAVING is not allowed.
-    3. CUBE is not allowed.
-    4. ROLLUP is not allowed.
-    5. GROUP BY ALL is not allowed.
-    6. All GROUP BY columns must appear in the SELECT list.
-    
-    ### Why COUNT_BIG(*)?
-    
-    `COUNT_BIG(*)` returns a BIGINT (8-byte integer).
-    
-    It is required for grouped indexed views.
-    
-    ### Calculating AVG
-    
-    Although AVG is restricted, an equivalent calculation can be performed using:
-    
-    ```sql
-    SUM(Amount) / COUNT_BIG(*)
-    ```
-    
-    ### Checking view indexability
-    
-    ```sql
-    SELECT OBJECTPROPERTY(
-        OBJECT_ID('dbo.vw_ProductSales'),
-        'IsIndexable'
-    );
-    ```
-    
-    A result of 1 means the view meets the indexability requirements.
-    
-    ---
-    
-    # 12. Creating an Indexed View
-    
-    Example based on the AdventureWorks database:
-    
-    ```sql
-    USE AdventureWorks2012;
-    GO
-    
-    CREATE VIEW dbo.Vdiscount1
-    WITH SCHEMABINDING
-    AS
-    SELECT
-        SUM(UnitPrice * OrderQty) AS SumPrice,
-        SUM(UnitPrice * OrderQty * (1.00 - UnitPriceDiscount))
-            AS SumDiscountPrice,
-        COUNT_BIG(*) AS Count,
-        ProductID
-    FROM Sales.SalesOrderDetail
-    GROUP BY ProductID;
-    GO
-    ```
-    
-    At this stage, it is still a normal view.
-    
-    It does not yet have physically materialized result rows.
-    
-    ### Create the unique clustered index
-    
-    ```sql
-    CREATE UNIQUE CLUSTERED INDEX VDiscount_Idx
-    ON dbo.Vdiscount1(ProductID);
-    GO
-    ```
-    
-    Now the view is materialized.
-    
-    The clustered index leaf level contains the actual aggregated view data.
-    
-    ### Verify physical storage
-    
-    ```sql
-    SELECT
-        si.name AS IndexName,
-        ps.used_page_count,
-        ps.reserved_page_count,
-        ps.row_count
-    FROM sys.dm_db_partition_stats AS ps
-    JOIN sys.indexes AS si
-        ON ps.object_id = si.object_id
-       AND ps.index_id = si.index_id
-    WHERE ps.object_id = OBJECT_ID('dbo.Vdiscount1');
-    ```
-    
-    The book's example shows:
-    
-    | Index        | Used pages | Reserved pages | Rows |
-    | ------------ | ---------: | -------------: | ---: |
-    | VDiscountIdx |          4 |              4 |  266 |
-    
-    This demonstrates that the view's result data is physically stored.
-    
-    ### Indexed view maintenance
-    
-    SQL Server automatically maintains the indexed view when underlying data changes.
-    
-    For example:
-    
-    * INSERT operations can add or update aggregated rows.
-    * UPDATE operations can change existing aggregated values.
-    * DELETE operations can reduce or remove aggregated rows.
-    
-    Unlike a temporary table, the indexed view automatically reflects changes to the underlying tables.
-    
-    **Important:** This automatic maintenance introduces additional write overhead.
-    
-    After creating the unique clustered index, you can create additional nonclustered indexes on the view.
-    
-    ### Checking whether a view is indexed
-    
-    ```sql
-    SELECT OBJECTPROPERTY(
-        OBJECT_ID('dbo.Vdiscount1'),
-        'IsIndexed'
-    );
-    ```
-    
-    A result of 1 indicates that the view is indexed.
-    
-    ---
-    
-    # 13. Using Indexed Views
-    
-    The Query Optimizer can sometimes use an indexed view even when the query does not explicitly reference it.
-    
-    Example:
-    
-    ```sql
-    SELECT
-        ProductID,
-        SUM(UnitPrice * OrderQty) AS TotalSales
-    FROM Sales.SalesOrderDetail
-    GROUP BY ProductID;
-    ```
-    
-    If an indexed view already contains the required aggregated data, the optimizer can evaluate whether using that view is cheaper than accessing the underlying table.
-    
-    The base table might not need to be accessed.
-    
-    ### Does SQL Server always use an indexed view?
-    
-    No.
-    
-    The Query Optimizer chooses an execution plan based on cost.
-    
-    Even when a query explicitly references the view, SQL Server might access the underlying tables instead.
-    
-    ### NOEXPAND hint
-    
-    You can use `NOEXPAND` to prevent expansion of a referenced indexed view.
-    
-    ```sql
-    SELECT *
-    FROM dbo.Vdiscount1 WITH (NOEXPAND);
-    ```
-    
-    Use hints only after comparing execution plans and measuring performance.
-    
-    ---
-    
-    # 14. Important DBA Takeaways
-    
-    | Concept                  | Key takeaway                                    |
-    | ------------------------ | ----------------------------------------------- |
-    | Computed column          | Derives values from other columns               |
-    | PERSISTED                | Stores computed values in the base table        |
-    | Index on computed column | Stores computed values in the index             |
-    | Deterministic            | Same inputs produce the same result             |
-    | Nondeterministic         | Same inputs can produce different results       |
-    | Precise                  | Does not have approximate numerical behaviour   |
-    | Schema binding           | Protects underlying schema dependencies         |
-    | Indexed view             | Physically stores view results                  |
-    | Unique clustered index   | Materializes indexed view data                  |
-    | COUNT_BIG(*)             | Required for GROUP BY indexed views             |
-    | NOEXPAND                 | Prevents expansion of a referenced indexed view |
-    
-    ## 15. Practical DBA Considerations
-    
-    Before creating these indexes, evaluate:
-    
-    * Determinism.
-    * Precision.
-    * Data type eligibility.
-    * Required SET options.
-    * Schema-binding requirements.
-    * Storage overhead.
-    * Additional write-maintenance overhead.
-    * Whether the optimizer actually uses the index.
-    
-    The goal is not simply to create more indexes. It is to improve query performance without introducing unnecessary storage and write costs.
+     # Non-Persisted Computed Column with Nonclustered Index
 
+    ## 1. Key Concepts
+    
+    - A non-persisted computed column is not physically stored in the base table.
+    - SQL Server calculates its value when required.
+    - Creating an NCI on the computed column stores its computed value in the NCI leaf level.
+    - For a heap, the NCI uses a RID as its row locator.
+    - When an underlying column is updated, SQL Server recalculates the computed value and maintains the NCI.
+    
+    ## 2. Practical Exercise    
+
+    ```sql
+    USE IndexInternals;
+    GO
+    
+    CREATE TABLE dbo.TestComputedColumn
+    (
+        EmployeeID INT NOT NULL,
+        Salary DECIMAL(10,2) NOT NULL,
+        Bonus AS (Salary * 0.10)
+    );
+    GO
+    
+    INSERT INTO dbo.TestComputedColumn
+        (EmployeeID, Salary)
+    VALUES
+        (1, 50000),
+        (2, 60000),
+        (3, 70000);
+    GO
+    
+    -- Check computed column metadata
+    SELECT name, is_computed, is_persisted
+    FROM sys.columns
+    WHERE object_id = OBJECT_ID('dbo.TestComputedColumn');
+    GO
+    
+    -- Create NCI
+    CREATE NONCLUSTERED INDEX IX_TestComputedColumn_Bonus
+    ON dbo.TestComputedColumn(Bonus);
+    GO
+    
+    -- Update underlying column
+    UPDATE dbo.TestComputedColumn
+    SET Salary = 100000
+    WHERE EmployeeID = 1;
+    GO
+    
+    **NCI leaf structure:**
+    - Bonus = Index Key
+    - RID = Row Locator
+    
+    ## 4. Index Maintenance
+    
+    When Salary changes:
+    1. SQL Server recalculates Bonus.
+    2. Removes the old index entry.
+    3. Inserts the new index entry.
+    4. Maintains the RID.
+    
+    ## 5. DBA Takeaway
+    An index on a non-persisted computed column can improve read performance, but increases write overhead because 
+    SQL Server must maintain the index whenever its underlying data changes.
+
+
+    # Exercise 2 – Persisted vs Non-Persisted Computed Columns
+    
+        ## 1. Key Concepts
+        
+        **Non-Persisted Computed Column**
+        - Not physically stored in the base table.
+        - Calculated when its value is required.
+        - If indexed, its computed value is stored in the NCI leaf level.
+        
+        **Persisted Computed Column**
+        - Physically stored in the base table data row.
+        - Recalculated when an underlying column is updated.
+        - If indexed, its value is also stored in the index.
+        
+        ## 2. Practical Exercise
+        
+        ```sql
+        USE IndexInternals;
+        GO
+        
+        CREATE TABLE dbo.TestComputedStorage
+        (
+            EmployeeID INT NOT NULL,
+            Salary DECIMAL(10,2) NOT NULL,
+            Bonus AS (Salary * 0.10),
+            Tax AS (Salary * 0.05) PERSISTED
+        );
+        GO
+        
+        INSERT INTO dbo.TestComputedStorage
+            (EmployeeID, Salary)
+        VALUES
+            (1, 50000),
+            (2, 60000),
+            (3, 70000),
+            (4, 80000),
+            (5, 90000);
+        GO
+        
+        -- Check computed column metadata
+        SELECT
+            name,
+            is_computed,
+            is_persisted
+        FROM sys.columns
+        WHERE object_id = OBJECT_ID('dbo.TestComputedStorage');
+        GO
+        
+        -- Inspect table data
+        SELECT *
+        FROM dbo.TestComputedStorage;
+        GO
+        
+        -- Update underlying column
+        UPDATE dbo.TestComputedStorage
+        SET Salary = 100000
+        WHERE EmployeeID = 1;
+        GO
+        ```
+        
+        ## 4. Index Maintenance
+        
+        When Salary is updated:
+        - SQL Server recalculates both Bonus and Tax.
+        - Tax is stored in the heap data row.
+        - Bonus is calculated when required.
+        - If Bonus has an NCI, SQL Server maintains its index entry.
+        
+        ## 5. DBA Takeaway
+        
+        - `PERSISTED` controls storage in the base table.
+        - Creating an index controls storage in the index.
+        - These are independent concepts.
+        - Persisted computed columns consume additional base-table storage.
+        - Indexes on computed columns introduce additional write-maintenance overhead.
+
+
+    # Exercise 3 – Imprecise Computed Columns
+    
+        ## 1. Deterministic vs Precise
+        
+        - Deterministic: Same input always produces the same output.
+        - Precise: Expression produces an exact result.
+        - FLOAT and REAL expressions are considered imprecise.
+        
+        ## 2. Important Rules
+        
+        - A computed column must satisfy SQL Server's indexing requirements.
+        - An imprecise computed column must be PERSISTED to be used as an index key.
+        - PERSISTED stores the computed value in the base table.
+        - PERSISTED does not change an imprecise expression into a precise expression.
+        
+        ## 3. Example
+        
+        ```sql
+        CREATE TABLE dbo.TestImpreciseColumn
+        (
+            EmployeeID INT NOT NULL,
+            Salary FLOAT NOT NULL,
+            Bonus AS (Salary * 0.10) PERSISTED
+        );
+        GO
+        
+        CREATE NONCLUSTERED INDEX IX_TestImpreciseColumn_Bonus
+        ON dbo.TestImpreciseColumn(Bonus);
+        GO
+        ```
+        
+        ## 4. COLUMNPROPERTY Checks
+        
+        ```sql
+        SELECT
+            COLUMNPROPERTY(
+                OBJECT_ID('dbo.TestImpreciseColumn'),
+                'Bonus',
+                'IsDeterministic'
+            ) AS IsDeterministic,
+        
+            COLUMNPROPERTY(
+                OBJECT_ID('dbo.TestImpreciseColumn'),
+                'Bonus',
+                'IsPrecise'
+            ) AS IsPrecise,
+        
+            COLUMNPROPERTY(
+                OBJECT_ID('dbo.TestImpreciseColumn'),
+                'Bonus',
+                'IsIndexable'
+            ) AS IsIndexable,
+        
+            COLUMNPROPERTY(
+                OBJECT_ID('dbo.TestImpreciseColumn'),
+                'Bonus',
+                'IsPersisted'
+            ) AS IsPersisted;
+        ```
+        
+        ## 5. Key Takeaway
+        
+        An imprecise computed column involving FLOAT or REAL must be PERSISTED before it can be used as an index key.
+        
+        PERSISTED controls physical storage; it does not change the precision of the expression.
